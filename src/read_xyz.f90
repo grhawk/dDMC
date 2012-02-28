@@ -20,13 +20,12 @@ USE file_tools
 
 IMPLICIT NONE
 
-TYPE xyz_coords
+TYPE,public :: xyz_coords
    character(5) :: atom_type
    real(ki),dimension(3) :: coord
 END type xyz_coords
 
-integer(ki) :: natom
-type(xyz_coords),allocatable :: coords(:)
+type(xyz_coords),target,allocatable :: coords(:)
 
 PRIVATE
 PUBLIC :: get_coords, coords
