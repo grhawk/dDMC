@@ -45,7 +45,6 @@ CONTAINS
   
   integer(ki) FUNCTION getunit(input)
     character(*),intent(IN) :: input
-!    integer(ki) :: getunit
     
     integer(ki)  :: i    ! counter
     
@@ -59,35 +58,36 @@ CONTAINS
     
   END FUNCTION getunit
   
-  SUBROUTINE openfile(file_name,writable)
+  SUBROUTINE openfile(file_name,readwrite)
     IMPLICIT NONE
-    character,optional,intent(IN) :: writable
-    logical :: newold
+    character(*),optional,intent(IN) :: readwrite
     character(*), intent(IN) :: file_name
+    logical :: newold
     integer(ki) :: iu 
     integer(ki)              :: err
-    
-    newold=.false.
-    print*, newold
-    if( writable == 'writable' ) newold = .true.
-    print*, newold
-    print*, iu, file_name
-    
 
     call refresh_file_unit(unit=iu,file=file_name,create=.true.)
+
+!    print*, 'opening ',file_name  ! debug
     
     select case (file_name)
     case('ciccio.brutto')
        ! Personal options for that filename
-       OPEN(iu,file=file_name,action='READ',form='FORMATTED',STATUS='OLD',IOSTAT=err)
     case default
-       print*, '000 ',iu, file_name
-       OPEN(iu,file=file_name,action='READWRITE',IOSTAT=err)
-!       if( newold ) OPEN(iu,file=file_name,action='WRITE',form='FORMATTED',STATUS='NEW',IOSTAT=err)
-       if( .not. newold ) OPEN(iu,file=file_name,action='READ',form='FORMATTED',STATUS='OLD',IOSTAT=err)
+       if( .not. present(readwrite)) stop 'ERROR: You have to specify if the file si writable or not'
+       if( readwrite == 'write' ) OPEN(iu,file=file_name,action='READWRITE',form='FORMATTED',status='NEW',IOSTAT=err)
+       if( readwrite == 'read' ) OPEN(iu,file=file_name,action='READ',form='FORMATTED',STATUS='OLD',IOSTAT=err)
     end select
     
-    print*, err
+!    print*, iu,file_name,' opened' ! debug
+
+!    do i = 1,10  ! debug
+!       read(iu,*) junk  ! debug
+!       print*, junk  ! debug
+!    end do  ! debug
+!    rewind(iu)  ! debug
+    
+!    print*, err ! debug
     if(err /=  0) stop 'Error opening file'
     
 
@@ -155,37 +155,43 @@ CONTAINS
        end do doloop
     end if
     
-    do i =1,maxfile
-       print*, file_unit(i)%unit,' --- ',file_unit(i)%file
-    end do
-    print*, opened_files, unit
+!    do i =1,maxfile   ! debug
+!       print*, file_unit(i)%unit,' --- ',file_unit(i)%file  ! debug
+!    end do  ! debug
+!    print*, 'opened files ',opened_files, '   last unit ',unit  ! debug
+
   END SUBROUTINE refresh_file_unit
 
 END MODULE file_tools
 
-program test
-  USE file_tools
-
-  IMPLICIT NONE
-  
-  call openfile('cioacioa','writable')
-  call openfile('cazcaz','writable')
-  
-  print*, 'opened'
-
-  write(fiit('cioacioa'),*) 'cioacioa'
-  write(fiit('cazcaz'),*) 'cazcaz'
-
-  print*, 'writened'
-
-  call closefile('cioacioa')
-  call openfile('results.tag')
-  call closefile('cazcaz')
-  call closefile('results.tag')
-
-
-  print*, 'closeded'
-
-  
-
-end program test
+!!$program test
+!!$  USE file_tools
+!!$
+!!$  IMPLICIT NONE
+!!$  
+!!$  print*, 'open cioacioa in write mode'
+!!$  call openfile('cioacioa','write')
+!!$  print*, 'open cazcaz in write mode'
+!!$  call openfile('cazcaz','write')
+!!$  
+!!$
+!!$  print*, 'write cioacioa'
+!!$  write(fiit('cioacioa'),*) 'cioacioa'
+!!$  print*, 'write cazcaz'
+!!$  write(fiit('cazcaz'),*) 'cazcaz'
+!!$
+!!$
+!!$  print*, 'closing cioacioa'
+!!$  call closefile('cioacioa')
+!!$  print*, 'opening results.tag'
+!!$  call openfile('results.tag','read')
+!!$  print*, 'closing cazcaz'
+!!$  call closefile('cazcaz')
+!!$  print*, 'closing results.tag'
+!!$  call closefile('results.tag')
+!!$
+!!$  print*, 'closeded'
+!!$
+!!$  
+!!$
+!!$end program test
