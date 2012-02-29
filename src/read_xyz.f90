@@ -21,6 +21,7 @@ USE file_tools
 IMPLICIT NONE
 
 TYPE,public :: xyz_coords
+   integer(ki)  :: index
    character(5) :: atom_type
    real(ki),dimension(3) :: coord
 END type xyz_coords
@@ -52,9 +53,11 @@ CONTAINS
 !    i = 0
     do i = 1,natom
 !       i = i + 1
-       read(fiit(file),*,iostat=err) coords(i)!%atom_type, (coords(i)%coods(j), j=1,3)
+       coords(i)%index = i
+       read(fiit(file),*,iostat=err) coords(i)%atom_type, &
+            coords(i)%coord(1),coords(i)%coord(2),coords(i)%coord(3)
 !       print*, coords(i), i,natom ! debug
-!       if( err /=0) exit
+       if( err /=0) exit
     end do
 
     call closefile(file)
@@ -74,7 +77,7 @@ END MODULE read_xyz
 !!$  call get_coords(file,natom)
 !!$  
 !!$  do i = 1,natom
-!!$     write(*,*) coords(i)%atom_type, coords(i)%coord(:)
+!!$     write(*,*) coords(i)!coords(i)%atom_type, coords(i)%coord(:)
 !!$  end do
 !!$
 !!$end program test
