@@ -23,7 +23,7 @@ IMPLICIT NONE
 TYPE,public :: xyz_coords
    integer(ki)  :: index
    character(5) :: atom_type
-   real(ki),dimension(3) :: coord
+   real(kr),dimension(3) :: coord
 END type xyz_coords
 
 type(xyz_coords),target,allocatable :: coords(:)

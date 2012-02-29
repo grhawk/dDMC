@@ -24,7 +24,7 @@ MODULE file_tools
   END INTERFACE closefile
 
   PRIVATE
-  PUBLIC openfile,closefile,fiit
+  PUBLIC :: openfile,closefile,fiit
 
 
 
