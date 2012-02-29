@@ -24,13 +24,13 @@ MODULE read_tag_dftbp
   integer(ki),parameter :: maxchar = 30  ! Maximun lenght for strings (At least redefined in declaration of string)
 
   character(maxchar),dimension(3)       :: form_shrk
-  real(kr),allocatable,dimension(:,:,:) :: matrix
-  integer(ki)  :: ifrmt(maxrank)
+  real(kr),allocatable,dimension(:,:,:),target :: matrix
+  integer(ki),target  :: ifrmt(maxrank)
   integer(ki)  :: iu
   
 
   PRIVATE
-  PUBLIC  :: getdata,matrix,ifrmt
+  PUBLIC  :: get_tag_data,matrix,ifrmt
 
 CONTAINS
   
@@ -131,7 +131,7 @@ CONTAINS
   END SUBROUTINE read_matrix
 
   
-  SUBROUTINE getdata(property,file)
+  SUBROUTINE get_tag_data(property,file)
     ! This is the only subroutine "callable"
     ! from the main program. This subroutine
     ! (using the above ones) generate a variable
@@ -144,7 +144,7 @@ CONTAINS
     call read_property(property)
     call closefile(file)
     
-  END SUBROUTINE  getdata
+  END SUBROUTINE  get_tag_data
 
 END MODULE read_tag_dftbp
   
@@ -168,8 +168,8 @@ END MODULE read_tag_dftbp
 !!$!  call open_file('results.tag')
 !!$!  call read_property(prop)
 !!$  
-!!$  call getdata(prop,'results.tag')
-!!$!  call getdata('eigenvalues','prova.f90')
+!!$  call get_tag_data(prop,'results.tag')
+!!$!  call get_tag_data('eigenvalues','prova.f90')
 !!$    do i=1,ifrmt(1)                          ! debug
 !!$       do j=1,ifrmt(2)                       ! debug
 !!$       do k=1,ifrmt(3)                       ! debug
