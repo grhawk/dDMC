@@ -1,4 +1,4 @@
-MODULE atom_data
+MODULE read_atomdata
   USE precision
   USE file_tools
   
@@ -11,7 +11,7 @@ MODULE atom_data
      real(kr)     :: TSC6
      real(kr)     :: D3C6
   end type atomdata_type
-  type(atomdata_type),allocatable,dimension(:) :: atomdata
+  type(atomdata_type),allocatable,target :: atomdata(:)
   
 
  INTERFACE findatom
@@ -100,7 +100,7 @@ CONTAINS
     
 
 
-END MODULE atom_data
+END MODULE read_atomdata
 
 
 !!$program test
