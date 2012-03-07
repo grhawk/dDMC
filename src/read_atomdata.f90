@@ -10,6 +10,8 @@ MODULE read_atomdata
      real(kr)     :: polarizability
      real(kr)     :: TSC6
      real(kr)     :: D3C6
+! Covalent radius
+     real(kr)     :: vdWr
   end type atomdata_type
   type(atomdata_type),allocatable,target :: atomdata(:)
   
