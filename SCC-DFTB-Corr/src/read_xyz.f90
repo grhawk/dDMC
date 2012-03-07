@@ -1,5 +1,8 @@
 MODULE read_xyz
 
+!TODO:
+! - Generalize the comment reading method
+
 ! Calling get_data(file,dummy) from main (where file !
 ! is the name of the xyz file) you obtain the number !
 ! of atom in the file as "dummy" and will be         !
@@ -40,19 +43,21 @@ CONTAINS
     character(30) :: junk
 
     integer(ki) :: err
-    integer(ki) :: i,j
+    integer(ki) :: i,j,j1,j2
   
     call openfile(file,'read')
     
     read(fiit(file),*) natom
-    
+    read(fiit(file),*) junk
+    if( junk(1:1) == 'H' .or. junk(1:1) == 'C' .or.  &
+         junk(1:1) == 'O' .or. junk(1:1) == 'N' .or. &
+         junk(1:1) == 'S' .or. junk(1:1) == 'P' ) backspace(fiit(file))
+
     allocate(coords(natom)) ! Needs more options
     
 !    print*, natom  ! debug
 
-!    i = 0
     do i = 1,natom
-!       i = i + 1
        coords(i)%index = i
        read(fiit(file),*,iostat=err) coords(i)%atom_type, &
             coords(i)%coord(1),coords(i)%coord(2),coords(i)%coord(3)
