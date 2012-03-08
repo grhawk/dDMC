@@ -5,7 +5,7 @@ PROGRAM SCC_Disp
   USE read_tag_dftbp
   USE read_xyz
   USE read_atomdata
-!  USE parser_input  ! Not implemented - not indispensable
+  USE ReadInput  ! TODO better
   USE parameter, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
   integer(ki) :: natom
@@ -23,17 +23,20 @@ PROGRAM SCC_Disp
   real(kr),dimension(2,2) :: E
   real(kr),dimension(2)  :: C6ab
   
-  real(kr) :: Rab,ba,bb,bab,damp,b0,kkk
+  real(kr) :: Rab,ba,bb,bab,damp
 
   integer(ki) :: i,j,k
 
-  character(30) :: inputtagfile,inputcoofile,atomdatafile
+!  integer(ki) :: b0                                         --> Red from ReadInput
+!  character(30) :: inputtagfile,inputcoofile,atomdatafile   --> Red from ReadInput
   
-  b0 = 1
-  inputtagfile = 'results.tag'
-  inputcoofile = '91.xyz'
-  atomdatafile = 'atomdata.data'
-  
+!  b0 = 1
+!  inputtagfile = 'results.tag'
+!  inputcoofile = '91.xyz'
+!  atomdatafile = 'atomdata.data'
+
+  call read_stdin
+!  stop ! debug
   ! Mesure Units:
   ! Ni -> Electron fraction
   ! Coordinates -> Angstrom

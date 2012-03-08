@@ -10,11 +10,19 @@ MODULE string_tools
   integer(ki) :: strlen
 
   PRIVATE
-  PUBLIC ::  shrink_count, shrink_string, char2int, char2real
+  PUBLIC ::  shrink_count, shrink_string, char2int, char2real!, real2char
 
 
 CONTAINS
   
+!!$  real(kr) FUNCTION real2char(charvar)
+!!$    IMPLICIT NONE
+!!$    character(*), intent(IN) :: charvar
+!!$    
+!!$    read(int2char,*) charvar
+!!$    
+!!$  END FUNCTION int2char
+
   FUNCTION char2int(charvar,n)
     ! This function converts numbers in string-form 
     ! in integer
@@ -37,17 +45,16 @@ CONTAINS
     
   END FUNCTION char2int
 
-  FUNCTION char2real(charvar,n) !(to test)
+  FUNCTION char2real(charvar) !(to test)
     ! Like the char2int but converts the numbers in real
     IMPLICIT NONE
-    integer(ki),intent(IN) :: n
-    character(*),intent(IN) :: charvar(n)
-    real(kr),dimension(n) :: char2real
-    integer(kr) :: i
+    character(*),intent(IN) :: charvar
+    real(kr) :: char2real
+!    integer(kr) :: i
     
-    do i = 1,n
-       read(charvar(i),*) char2real(i)
-    end do
+!    do i = 1,n
+       read(charvar,*) char2real
+!    end do
   END FUNCTION char2real
   
 
