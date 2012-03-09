@@ -227,8 +227,13 @@ CONTAINS
     real(kr),intent(IN) :: b0,alpha,N
     integer(ki),intent(IN) :: Z
     
-    basym = b0 * ( 1 / alpha )**(1./3.) * ( real(Z) / N )**(1./3.)
+    basym = b0 * ( 1 / alpha )**(1./3.) * ( abs(real(Z) / N) )**(1./3.)
     
+! In the original version from JCTC, instead of atomic number and 
+! mulliken population, there were Volumes. So, since the volume never
+! assumes negative values, I used an absolute value, to prevent this 
+! ratio to be negative.
+
 !    print*, 'basym', b0,alpha,Z,N  ! debug
     
   END FUNCTION basym
