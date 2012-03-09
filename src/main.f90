@@ -109,7 +109,18 @@ PROGRAM SCC_Disp
   !!!!!!!!!!!!!!! COMPUTE WEIGHTS & C6AIM !!!!!!!!!!!!!!!!
 
   ! Retrive data from results.tag
-  call get_tag_data('atomic_charges',inputtagfile)
+  ! + When the spin polarization is used in the calculation with 
+  ! + dftb+, the atomic charges are spanned on a matrix of dimension
+  ! + natom x 2. Doing some test about the value in the second column, 
+  ! + I realized that only the first column is important: I compared the
+  ! + value of "Net atomic charges" in the detailed.out file with the
+  ! + values in the matrix. I have seen that only the values in the first
+  ! + column are coerent with the value in detailed.out. I'm sure that the 
+  ! + called "Net atomic charges" are independent from spin polarization because
+  ! + I obtained the same value summing the electronic popolutaion of each spin.
+  ! + These values of electronic population are present below, still in the 
+  ! + detailed.out file.
+  call get_tag_data('atomic_charges',inputtagfile) 
   Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
   Ni_size => ifrmt(1)
   
@@ -131,6 +142,7 @@ PROGRAM SCC_Disp
      polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3 ! -polar for    "   "
   end do
  
+
 !  write(*,'(I5 /)') (Zaim(i), i = 1,natom) ! debug
 !  write(*,'(f8.3 /)') (C6free(i,1), i = 1,natom) ! debug
 !  write(*,'(f8.3 /)') (C6free(i,2), i = 1,natom) ! debug
