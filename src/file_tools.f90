@@ -88,7 +88,7 @@ CONTAINS
 !    rewind(iu)  ! debug
     
 !    print*, err ! debug
-    if(err /=  0) stop 'Error opening file'
+    if(err /=  0) call errors('opening',file_name)
     
 
  !   print*, opened_file ! debug
@@ -162,6 +162,22 @@ CONTAINS
 
   END SUBROUTINE refresh_file_unit
 
+  SUBROUTINE errors(type,parameters)
+    IMPLICIT NONE
+    character(*), INTENT(IN) :: type,parameters
+    
+    select case (type)
+       
+    case('opening')
+       write(0,10100) parameters
+       stop
+
+    end select
+
+10100 format('Error while opening file: ',A30)   
+    
+  END SUBROUTINE errors
+  
 END MODULE file_tools
 
 !!$program test
