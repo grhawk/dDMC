@@ -22,7 +22,7 @@ CONTAINS
     character(64) :: junk,nojunk(2)
     integer(ki) :: err,i,nstring,ninput,nl
     
-    nl = 0
+    nl = 0; ninput = 0
     do
        read(5,'(A64)',iostat=err) junk
 !       print*, junk  ! debug
