@@ -4,15 +4,16 @@ MODULE ReadInput
   !  inputcoofile
   !  atomdatafile
   !  b0
+  !  A
 
   USE precision
   USE string_tools
   IMPLICIT NONE
   character(64) :: inputtagfile,inputcoofile,atomdatafile
-  real(kr)      :: b0
+  real(kr)      :: b0,A
 
   PRIVATE
-  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,b0,read_stdin
+  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,b0,A,read_stdin
 !  PUBLIC :: 
   
 CONTAINS
@@ -21,7 +22,7 @@ CONTAINS
     IMPLICIT NONE
     character(64) :: junk,nojunk(2)
     integer(ki) :: err,i,nstring,ninput,nl
-    
+
     nl = 0; ninput = 0
     do
        read(5,'(A64)',iostat=err) junk
@@ -49,6 +50,9 @@ CONTAINS
           case ('b0')
              b0 =  char2real(nojunk(2))
              ninput = ninput + 1
+          case ('A')
+             A =  char2real(nojunk(2))
+             ninput = ninput + 1
           case default
              write(0,*) 'INPUT ERROR IN LINE ',nl
           end select
@@ -56,7 +60,7 @@ CONTAINS
        end if
     end do
     
-    if( ninput /= 4 ) stop 'ERROR: too much parameter in input'
+    if( ninput /= 5 ) stop 'ERROR: wrong parameters in input'
     
     call starting_program_announce
     
@@ -66,9 +70,11 @@ CONTAINS
     IMPLICIT NONE
     
     write(0,*) 'Program is starting whit this data:'
-    write(0,*) 'file tag: ', inputtagfile
+    write(0,*) 'file tag: #', inputtagfile,"#"
     write(0,*) 'file geometry: ', inputcoofile
     write(0,*) 'atomic data: ', atomdatafile
+    write(0,*) 'b0 value: ', b0
+    write(0,*) 'A  value: ', A
     
   END SUBROUTINE starting_program_announce
 

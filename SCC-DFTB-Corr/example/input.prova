@@ -4,3 +4,4 @@ tag = results.tag
 geometry = 91.xyz
 atomdata = atomdata.data
 b0 = 1.0
+A = 0.0

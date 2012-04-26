@@ -1,4 +1,4 @@
-PROG = SCC-DFTB-DispC
+PROG = SCC-DFTB-dDMC
 FC = ifort
 #FC = gfortran
 #FC = gfortran -ffixed-line-length-0 -std=legacy 
