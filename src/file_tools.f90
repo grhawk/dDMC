@@ -74,7 +74,7 @@ CONTAINS
     case('ciccio.brutto')
        ! Personal options for that filename
     case default
-       if( .not. present(readwrite)) stop 'ERROR: You have to specify if the file si writable or not'
+       if( .not. present(readwrite)) stop 'ERROR: You have to specify if the file is writable or not'
        if( readwrite == 'write' ) OPEN(iu,file=file_name,action='READWRITE',form='FORMATTED',status='NEW',IOSTAT=err)
        if( readwrite == 'read' ) OPEN(iu,file=file_name,action='READ',form='FORMATTED',STATUS='OLD',IOSTAT=err)
     end select

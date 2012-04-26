@@ -23,9 +23,12 @@ PROGRAM SCC_Disp
   real(kr),dimension(2,2) :: E
   real(kr),dimension(2)  :: C6ab
   
-  real(kr) :: Rab,ba,bb,bab,damp
+  real(kr) :: Rab,ba,bb,bab,damp,hhrep
 
   integer(ki) :: i,j,k
+
+!  integer(ki) :: Hctrl,l
+  logical :: Hi,Hj
 
 !  integer(ki) :: b0                                         --> Red from ReadInput
 !  character(30) :: inputtagfile,inputcoofile,atomdatafile   --> Red from ReadInput
@@ -98,6 +101,18 @@ PROGRAM SCC_Disp
   ! in this routine:
   !
   ! V_i,free / V_i,AIM = Z_i / N_i (see above)
+  !
+  ! The descibed dumping function don't work well for hydrogen interaction. A known
+  ! issue of SCC-DFTB is the overbinding of hydrogen system (see Hobza JCTC 8 (2012), 141).
+  ! In order to obtain better result, I use a more complex damping function, 
+  ! provided from Tang and Tonnies (J. Chem. Phys. 80 (1984), 8) so that at the end
+  ! the energy is:
+  ! 
+  ! E'_disp = A * exp( x ) * E_disp
+  !
+  ! where E_disp and x are defined before, while A is a parameter that should be
+  ! optimized. Indeed this correction will be used to compute energy only between
+  ! H atoms. For all other couples I will use the previous equation for energy: E_disp.
 
   ! If I would reduce memory consumption, I can compute the C6AIM 
   ! on-the-fly while I compute energy... In this first version I don't 
@@ -120,6 +135,7 @@ PROGRAM SCC_Disp
   ! + I obtained the same value summing the electronic popolutaion of each spin.
   ! + These values of electronic population are present below, still in the 
   ! + detailed.out file.
+
   call get_tag_data('atomic_charges',inputtagfile) 
   Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
   Ni_size => ifrmt(1)
@@ -163,22 +179,47 @@ PROGRAM SCC_Disp
 
   E = 0.0
   atom1: do i = 1,natom
+     Hi = IsHAtom(i)
      atom2: do j = i+1,natom
+        Hj = IsHAtom(j)
         Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
         ba = basym(b0,polar(i),Ni(i),Zaim(i))
         bb = basym(b0,polar(j),Ni(j),Zaim(j))
         bab = bmix(ba,bb)
         damp = fdamp(bab,Rab)
+        hhrep = hCor(A,bab,Rab)
 !        print*, i,j,Rab,bb,ba,damp ! debug
 !        print*, Rab, i ,j,coords(i)%coord,coords(j)%coord ! debug
 !        stop ! debug 
+           
+!!$        Hctrl = 0
+!!$        do l = 1,2
+!!$           if( coords(i)%atom_type == HAtom(l) ) Hctrl = Hctrl + 1
+!!$           if( coords(j)%atom_type == HAtom(l) ) Hctrl = Hctrl + 1
+!!$           write(0,*) coords(j)%atom_type, coords(i)%atom_type,Hctrl ! debug
+!!$           if( Hctrl == 2 ) write(0,*) "Hydrogen Atom Couple" ! debug
+!!$           if( Hctrl > 2 )  write(0,*) "Huston, we have a problem!!" ! debug
+!!$        end do
+!        write(0,*) coords(j)%atom_type, coords(i)%atom_type,Hi,Hj ! debug
+!        if( Hi .and. Hj ) write(0,*) "Hydrogen Atom Couple" ! debug
+
+
         TSvsD3loop : do k = 1,2  ! 1 => TS ; 2 => D3
            C6ab(1) = 2 * C6aim(i,k) * C6aim(j,k) / &
                 ( C6aim(i,k) + C6aim(j,k) )                  ! REL A
            C6ab(2) = 2 * C6aim(i,k) * C6aim(j,k) / &
                 ( ( polar(j) / polar(i) ) * C6aim(i,k) + &
                 ( polar(i) / polar(j) ) * C6aim(j,k) )       ! REL B
-           E(:,k) =  E(:,k) - damp * C6ab(:) / Rab**6                ! Not implemented damping function yet. 
+
+           E(:,k) =  E(:,k) - damp * C6ab(:) / Rab**6   ! Dispersion Energy
+
+           if( Hi .and. Hj ) then
+!              print*, 'HH' ! debug
+!              print*, "E before: ", E(:,k) ! debug
+              E(:,k) = E(:,k) + hhrep  ! HH-repulsion correction
+!              print*, "E after: ", E(:,k) ! debug
+           end if
+
         end do TSvsD3loop
      end do atom2
   end do atom1
@@ -227,12 +268,8 @@ CONTAINS
     real(kr),intent(IN) :: b0,alpha,N
     integer(ki),intent(IN) :: Z
     
-    basym = b0 * ( 1 / alpha )**(1./3.) * ( abs(real(Z) / N) )**(1./3.)
+    basym = b0 * ( 1 / alpha )**(1./3.) * ( real(Z) / N )**(1./3.)
     
-! In the original version from JCTC, instead of atomic number and 
-! mulliken population, there were Volumes. So, since the volume never
-! assumes negative values, I used an absolute value, to prevent this 
-! ratio to be negative.
 
 !    print*, 'basym', b0,alpha,Z,N  ! debug
     
@@ -254,6 +291,15 @@ CONTAINS
 !    print*, 'fdamp ',fdamp ! debug
     
   END FUNCTION fdamp
-  
+
+  real(kr) FUNCTION hCor(A,b,R)
+    IMPLICIT NONE
+    real(kr),intent(IN) :: A,b,R
+    
+    hCor = A * exp( -b * R )
+!    print*, "Inside Function: ",hcor, A, b ,R ! debug
+    
+  END FUNCTION hCor
+
 END PROGRAM SCC_Disp
   

@@ -17,6 +17,12 @@ MODULE read_xyz
 ! 2 => y                                             !
 ! 3 => z                                             !
 ! )                                                  !
+!
+! 26.04.2012
+! Added a function in order to know if an atom is or !
+! not an Hydrogen from the atom index in the molecule!
+! This function is important to apply the            !
+! HH-repulsion correction to dDMC correction.        !
 
 USE precision
 USE file_tools
@@ -32,7 +38,7 @@ END type xyz_coords
 type(xyz_coords),target,allocatable :: coords(:)
 
 PRIVATE
-PUBLIC :: get_coords, coords
+PUBLIC :: get_coords, coords, IsHAtom
 
 CONTAINS
 
@@ -68,6 +74,24 @@ CONTAINS
     call closefile(file)
 
   END SUBROUTINE get_coords
+
+  logical FUNCTION IsHAtom(index)
+    IMPLICIT NONE
+    integer(ki),intent(IN) :: index
+    character(1) :: HAtom(2)
+    integer(ki) :: l
+    
+
+    HAtom=(/ 'H','h' /)
+
+    do l = 1,2
+       if( coords(index)%atom_type == HAtom(l) ) IsHAtom = .true.
+    end do
+    
+    
+  END FUNCTION IsHAtom
+  
+
 
 END MODULE read_xyz
 
