@@ -230,11 +230,13 @@ PROGRAM SCC_Disp
   ! E(:,1) => Energy from TS
   ! E(:,2) => Energy from D3
 
+! The results have to be in Hartree to be consistent with DFTB+. 
+! The DispCalculator, then, provide to make this energies in Kcal/mol
   write(*,*) '#  ',inputcoofile
-  write(*,'("A-TS  ",f10.3)') E(1,1) * HartKcalMol
-  write(*,'("A-D3  ",f10.3)') E(1,2) * HartKcalMol
-  write(*,'("B-TS  ",f10.3)') E(2,1) * HartKcalMol
-  write(*,'("B-D3  ",f10.3)') E(2,2) * HartKcalMol
+  write(*,'("A-TS  ",f20.3)') E(1,1)! * HartKcalMol
+  write(*,'("A-D3  ",f20.3)') E(1,2)! * HartKcalMol
+  write(*,'("B-TS  ",f20.3)') E(2,1)! * HartKcalMol
+  write(*,'("B-D3  ",f20.3)') E(2,2)! * HartKcalMol
 
 !!$  do i = 1,100     ! debug
 !!$     !     write(0,*) bab,bb,ba      ! debug

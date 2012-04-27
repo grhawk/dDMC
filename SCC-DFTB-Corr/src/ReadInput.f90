@@ -62,7 +62,7 @@ CONTAINS
     
     if( ninput /= 5 ) stop 'ERROR: wrong parameters in input'
     
-    call starting_program_announce
+!    call starting_program_announce
     
   END SUBROUTINE read_stdin
   
