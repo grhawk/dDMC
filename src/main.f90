@@ -123,7 +123,7 @@ PROGRAM SCC_Disp
 
   !!!!!!!!!!!!!!! COMPUTE WEIGHTS & C6AIM !!!!!!!!!!!!!!!!
 
-  ! Retrive data from results.tag
+  ! Retriving data from results.tag
   ! + When the spin polarization is used in the calculation with 
   ! + dftb+, the atomic charges are spanned on a matrix of dimension
   ! + natom x 2. Doing some test about the value in the second column, 
