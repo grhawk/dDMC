@@ -18,7 +18,7 @@ MODULE read_atomdata
 ! If the next is .true. the program need a file to read atomic
 ! properties, if false, the program will use the atomic properties
 ! reported in this subroutine.
-  logical,parameter :: read_from_file=.false. 
+  logical,parameter :: read_from_file = .false.
 
  INTERFACE findatom
     MODULE PROCEDURE atom_by_name, atom_by_number
@@ -36,7 +36,7 @@ CONTAINS
     integer(ki) :: natom,err,nl
     integer(ki) :: i
 
-    if( read_from_file ) then
+    if( .false. ) then
        call openfile(file,'read')
        
        natom = 0; nl = 0
@@ -68,6 +68,9 @@ CONTAINS
              !          print*, 'asd ', i   ! debug
           end if
        end do
+       
+       call closefile(file)
+
     else
        
        allocate(atomdata(54))
