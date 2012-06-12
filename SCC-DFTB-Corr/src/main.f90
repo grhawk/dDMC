@@ -6,7 +6,7 @@ PROGRAM SCC_Disp
   USE read_xyz
   USE read_atomdata
   USE ReadInput  ! TODO better
-  USE parameter, only : BohrAngst,HartKcalMol
+  USE parameters, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
   integer(ki) :: natom
 
