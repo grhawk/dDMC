@@ -1,4 +1,4 @@
-MODULE parameter
+MODULE parameters
   USE precision
   IMPLICIT NONE
   
@@ -9,4 +9,4 @@ MODULE parameter
   ! Pure Number
   real(kr),parameter :: avogadro = 6.02214199E-23   ! Avogadro Number
 
-END MODULE parameter
+END MODULE parameters
