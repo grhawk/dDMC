@@ -12,7 +12,7 @@ SRCS =  Makefile file_tools.f90 precision.f90 main.f90 read_atomdata.f90 \
 
 OBJS =  main.o file_tools.o precision.o read_atomdata.o \
 	read_tag_dftbp.o read_xyz.o string_tools.o utils.o parameters.o \
-	ReadInput.f90
+	ReadInput.o
 
 $(PROG): $(OBJS)
 	$(FC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
