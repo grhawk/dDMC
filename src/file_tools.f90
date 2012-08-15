@@ -5,11 +5,11 @@ MODULE file_tools
 
   TYPE file2unit
      integer(ki) :: unit
-     character*30 :: file
+     character*60 :: file
   END type file2unit
 
   integer(ki),parameter :: initial_value = 5000    ! First opened file unit - 1
-  integer(ki),parameter :: maxchar = 30            ! Standard lenght for character variable
+  integer(ki),parameter :: maxchar = 60            ! Standard lenght for character variable
   integer(ki),parameter :: maxfile = 15            ! Max num
 
   type(file2unit),save,dimension(maxfile) :: file_unit 
