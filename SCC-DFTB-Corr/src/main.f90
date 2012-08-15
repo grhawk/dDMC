@@ -29,6 +29,7 @@ PROGRAM SCC_Disp
 
 !  integer(ki) :: Hctrl,l
   logical :: Hi,Hj
+  logical,parameter :: fixb0 = .false.
 
 !  integer(ki) :: b0                                         --> Red from ReadInput
 !  character(30) :: inputtagfile,inputcoofile,atomdatafile   --> Red from ReadInput
@@ -183,11 +184,18 @@ PROGRAM SCC_Disp
      atom2: do j = i+1,natom
         Hj = IsHAtom(j)
         Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
-        ba = basym(b0,polar(i),Ni(i),Zaim(i))
-        bb = basym(b0,polar(j),Ni(j),Zaim(j))
-        bab = bmix(ba,bb)
-        damp = fdamp(bab,Rab)
-        hhrep = hCor(A,bab,Rab)
+
+        if( fixb0 ) then
+           damp = fdamp(b0,Rab)
+           hhrep = hCor(A,b0,Rab)
+        else
+           ba = basym(b0,polar(i),Ni(i),Zaim(i))
+           bb = basym(b0,polar(j),Ni(j),Zaim(j))
+           bab = bmix(ba,bb)
+           damp = fdamp(bab,Rab)
+           hhrep = hCor(A,bab,Rab)
+        end if
+
 !        print*, i,j,Rab,bb,ba,damp ! debug
 !        print*, Rab, i ,j,coords(i)%coord,coords(j)%coord ! debug
 !        stop ! debug 
@@ -231,12 +239,11 @@ PROGRAM SCC_Disp
   ! E(:,2) => Energy from D3
 
 ! The results have to be in Hartree to be consistent with DFTB+. 
-! The DispCalculator, then, provide to make this energies in Kcal/mol
   write(*,*) '#  ',inputcoofile
-  write(*,'("A-TS  ",f20.12)') E(1,1)! * HartKcalMol
-  write(*,'("A-D3  ",f20.12)') E(1,2)! * HartKcalMol
-  write(*,'("B-TS  ",f20.12)') E(2,1)! * HartKcalMol
-  write(*,'("B-D3  ",f20.12)') E(2,2)! * HartKcalMol
+  write(*,'("A-TS  ",f20.12)') E(1,1)
+  write(*,'("A-D3  ",f20.12)') E(1,2)
+  write(*,'("B-TS  ",f20.12)') E(2,1)
+  write(*,'("B-D3  ",f20.12)') E(2,2)
 
 !!$  do i = 1,100     ! debug
 !!$     !     write(0,*) bab,bb,ba      ! debug
