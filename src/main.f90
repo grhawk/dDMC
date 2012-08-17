@@ -29,7 +29,9 @@ PROGRAM SCC_Disp
 
 !  integer(ki) :: Hctrl,l
   logical :: Hi,Hj
-  logical,parameter :: fixb0 = .false.
+  logical :: fixb0
+  logical :: TTdf
+
 
 !  integer(ki) :: b0                                         --> Red from ReadInput
 !  character(30) :: inputtagfile,inputcoofile,atomdatafile   --> Red from ReadInput
@@ -40,6 +42,17 @@ PROGRAM SCC_Disp
 !  atomdatafile = 'atomdata.data'
 
   call read_stdin
+!  print*, '#',trim(adjustl(DampFunc)),'#'
+  select case ( DampFunc )
+  case('TT') 
+     TTdf = .true.
+  case('TTf')
+     TTdf = .true.
+     fixb0 = .true.
+  case default
+     write(0,*) "ERROR: Selected Dumping function not found"
+     stop
+  end select
 !  stop ! debug
   ! Mesure Units:
   ! Ni -> Electron fraction
@@ -184,16 +197,19 @@ PROGRAM SCC_Disp
      atom2: do j = i+1,natom
         Hj = IsHAtom(j)
         Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
-
-        if( fixb0 ) then
-           damp = fdamp(b0,Rab)
-           hhrep = hCor(A,b0,Rab)
-        else
-           ba = basym(b0,polar(i),Ni(i),Zaim(i))
-           bb = basym(b0,polar(j),Ni(j),Zaim(j))
-           bab = bmix(ba,bb)
-           damp = fdamp(bab,Rab)
-           hhrep = hCor(A,bab,Rab)
+        
+        if( TTdf ) then
+!           print*, 'TTdf TRUE' ! debug
+           if( fixb0 ) then
+              damp = fdamp(b0,Rab)
+              hhrep = hCor(A,b0,Rab)
+           else
+              ba = basym(b0,polar(i),Ni(i),Zaim(i))
+              bb = basym(b0,polar(j),Ni(j),Zaim(j))
+              bab = bmix(ba,bb)
+              damp = fdamp(bab,Rab)
+              hhrep = hCor(A,bab,Rab)
+           end if
         end if
 
 !        print*, i,j,Rab,bb,ba,damp ! debug
