@@ -17,13 +17,13 @@ PROGRAM SCC_Disp
 
   integer(ki),dimension(:),allocatable:: Zaim
   real(kr),dimension(:,:),allocatable :: C6aim,C6free
-  real(kr),dimension(:),allocatable :: polar
+  real(kr),dimension(:),allocatable :: polar,rvdw
 
 
   real(kr),dimension(2,2) :: E
   real(kr),dimension(2)  :: C6ab
   
-  real(kr) :: Rab,ba,bb,bab,damp,hhrep
+  real(kr) :: Rab0,Rab,ba,bb,bab,damp,hhrep
 
   integer(ki) :: i,j,k
 
@@ -31,6 +31,7 @@ PROGRAM SCC_Disp
   logical :: Hi,Hj
   logical :: fixb0
   logical :: TTdf
+  logical :: Grd
 
 
 !  integer(ki) :: b0                                         --> Red from ReadInput
@@ -49,6 +50,8 @@ PROGRAM SCC_Disp
   case('TTf')
      TTdf = .true.
      fixb0 = .true.
+  case('Gr')
+     Grd = .true.
   case default
      write(0,*) "ERROR: Selected Dumping function not found"
      stop
@@ -163,13 +166,14 @@ PROGRAM SCC_Disp
   if( Ni_size /= natom ) stop 'ERROR: check 1' ! Controls
   
   ! Compute C6AIM
-  allocate(C6aim(natom,2),C6free(natom,2),Zaim(natom),polar(natom))
+  allocate(C6aim(natom,2),C6free(natom,2),Zaim(natom),polar(natom),rvdw(natom))
 
   do i = 1,natom                                                  ! Some useful arrays:
      Zaim(i) = atomdata(findatom(coords(i)%atom_type))%Z          ! - Z_i of atoms in xyz file
      C6free(i,1) = atomdata(findatom(coords(i)%atom_type))%TSC6   ! - C6free by TS for "   "
      C6free(i,2) = atomdata(findatom(coords(i)%atom_type))%D3C6   ! - C6free by 3D for "   "
      polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3 ! -polar for    "   "
+     rvdw(i) = atomdata(findatom(coords(i)%atom_type))%vdWr / BohrAngst ! - Bondi radii
   end do
  
 
@@ -210,6 +214,10 @@ PROGRAM SCC_Disp
               damp = fdamp(bab,Rab)
               hhrep = hCor(A,bab,Rab)
            end if
+        elseif( Grd ) then
+           Rab0 = rvdw(i)+rvdw(j)
+           damp = grdamp( b0,1.0d0,1.0d0,Rab,Rab0)
+           hhrep = hCor(A,bab,Rab)
         end if
 
 !        print*, i,j,Rab,bb,ba,damp ! debug
@@ -279,6 +287,17 @@ PROGRAM SCC_Disp
 ! write(*,*) (((matrix(i,j,k), i=1,ifrmt(1)),j=1,ifrmt(2)),k=1,ifrmt(3))      ! debug
 !  write(*,*) coords      ! debug
 CONTAINS
+  
+  real(kr) FUNCTION grdamp(d,sr,s,r,r0)
+    ! Grimme damping function 
+    ! Material Transaction vol. 50 pagg 1664-1670
+    IMPLICIT NONE
+    real(kr),intent(IN) :: d,sr,s,r,r0
+    
+    grdamp = s/( 1 + exp(-d*(r/(sr*r0)-1)))
+    
+  END FUNCTION grdamp
+    
 
   real(kr) FUNCTION bmix(bi,bj)
     IMPLICIT NONE
