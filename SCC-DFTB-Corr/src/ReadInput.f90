@@ -5,15 +5,16 @@ MODULE ReadInput
   !  atomdatafile
   !  b0
   !  A
+  !  df  (damping function) (TT,TTfix)
 
   USE precision
   USE string_tools
   IMPLICIT NONE
-  character(64) :: inputtagfile,inputcoofile,atomdatafile
+  character(64) :: inputtagfile,inputcoofile,atomdatafile,DampFunc
   real(kr)      :: b0,A
 
   PRIVATE
-  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,b0,A,read_stdin
+  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,b0,A,read_stdin,DampFunc
 !  PUBLIC :: 
   
 CONTAINS
@@ -37,21 +38,24 @@ CONTAINS
 !          write(0,*) 'asd',junk,nojunk,nstring ! debug
           if( nstring /= 2 ) stop 'ERROR: checkpoint 1 in read_input'
           
-          select case (trim(nojunk(1)))
+          select case (trim(adjustl(nojunk(1))))
           case ('tag') 
-             inputtagfile = trim(nojunk(2))
+             inputtagfile = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
           case ('geometry') 
-             inputcoofile = trim(nojunk(2))
+             inputcoofile = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
           case ('atomdata')
-             atomdatafile = trim(nojunk(2))
+             atomdatafile = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
           case ('b0')
              b0 =  char2real(nojunk(2))
              ninput = ninput + 1
           case ('A')
              A =  char2real(nojunk(2))
+             ninput = ninput + 1
+          case ('df')
+             DampFunc = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
           case default
              write(0,*) 'INPUT ERROR IN LINE ',nl
@@ -60,7 +64,7 @@ CONTAINS
        end if
     end do
     
-    if( ninput /= 5 ) stop 'ERROR: wrong parameters in input'
+    if( ninput /= 6 ) stop 'ERROR: wrong parameters in input'
     
 !    call starting_program_announce
     
@@ -75,6 +79,7 @@ CONTAINS
     write(0,*) 'atomic data: ', atomdatafile
     write(0,*) 'b0 value: ', b0
     write(0,*) 'A  value: ', A
+    write(0,*) 'Dumping Function: ',DampFunc
     
   END SUBROUTINE starting_program_announce
 
