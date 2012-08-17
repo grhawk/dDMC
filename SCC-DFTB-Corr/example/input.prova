@@ -1,7 +1,12 @@
 # COmmento: La prossima e' una linea vuota
 
 tag = results.tag
-geometry = 91.xyz
+geometry = T2_T-100.xyz
 atomdata = atomdata.data
 b0 = 1.0
 A = 0.0
+
+# df:
+# TT - Tang and Tonnies with not fixed b
+# TTf - Tang and Toennies: b is fixed at b0 value
+df = TTf
