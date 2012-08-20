@@ -223,7 +223,7 @@ PROGRAM SCC_Disp
            end if
         elseif( Grd ) then
            Rab0 = cubsum(rvdw(i),rvdw(j))
-           damp = grdamp( b0,1.0d0,1.0d0,Rab,Rab0)
+           damp = wy2( b0,1.0d0,Rab,Rab0)
            hhrep = hCor(A,bab,Rab)
         elseif( GrTTd ) then
            Rab0 = cubsum(rvdw(i),rvdw(j))
@@ -299,15 +299,15 @@ PROGRAM SCC_Disp
 !  write(*,*) coords      ! debug
 CONTAINS
   
-  real(kr) FUNCTION grdamp(d,sr,s,r,r0)
+  real(kr) FUNCTION wy2(d,sr,r,r0)
     ! Grimme damping function 
-    ! Material Transaction vol. 50 pagg 1664-1670
+    ! Material Transaction vol. 50 pagg 1664-1670 Corrected with Stephan's supporting information
     IMPLICIT NONE
-    real(kr),intent(IN) :: d,sr,s,r,r0
+    real(kr),intent(IN) :: d,sr,r,r0
     
-    grdamp = s/( 1 + exp(-d*(r/(sr*r0)-1)))
+    wy2 = 0.5 * ( 1 + tanh( d*(r/(sr*r0)-1)))
     
-  END FUNCTION grdamp
+  END FUNCTION wy2
     
 
   real(kr) FUNCTION bmix(bi,bj)
@@ -368,7 +368,8 @@ CONTAINS
   real(kr) FUNCTION  GrTTfd(a,b,R,R0)
     IMPLICIT NONE
     real(kr),intent(IN) :: a,b,R,R0
-    
+    print*, a
+
     GrTTfd = 0.5*( 1 + dtanh( 23.0d0 * ( R / ( a * R0 ) - 1 ) ) ) * fdamp(b,R)
 
 
