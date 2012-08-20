@@ -203,11 +203,15 @@ PROGRAM SCC_Disp
         Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
         
         if( TTdf ) then
-!           print*, 'TTdf TRUE' ! debug
+!           write(0,*) 'TTdf TRUE' ! debug
            if( fixb0 ) then
+
+!           write(0,*) 'b0fixed TRUE' ! debug
+              
               damp = fdamp(b0,Rab)
               hhrep = hCor(A,b0,Rab)
            else
+!           write(0,*) 'b0fixed FAlse' ! debug
               ba = basym(b0,polar(i),Ni(i),Zaim(i))
               bb = basym(b0,polar(j),Ni(j),Zaim(j))
               bab = bmix(ba,bb)
