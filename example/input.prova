@@ -9,4 +9,6 @@ A = 0.0
 # df:
 # TT - Tang and Tonnies with not fixed b
 # TTf - Tang and Toennies: b is fixed at b0 value
+# Gr - 5 in Materials Transaction Vol. 50 pp 1664
+# GrTT - Used by stephan in JCTC 5,2950 (2009)
 df = TTf
