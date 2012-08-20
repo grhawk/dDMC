@@ -32,6 +32,7 @@ PROGRAM SCC_Disp
   logical :: fixb0
   logical :: TTdf
   logical :: Grd
+  logical :: GrTTd
 
 
 !  integer(ki) :: b0                                         --> Red from ReadInput
@@ -52,6 +53,8 @@ PROGRAM SCC_Disp
      fixb0 = .true.
   case('Gr')
      Grd = .true.
+  case('GrTT')
+     GrTTd = .true.
   case default
      write(0,*) "ERROR: Selected Dumping function not found"
      stop
@@ -222,6 +225,10 @@ PROGRAM SCC_Disp
            Rab0 = cubsum(rvdw(i),rvdw(j))
            damp = grdamp( b0,1.0d0,1.0d0,Rab,Rab0)
            hhrep = hCor(A,bab,Rab)
+        elseif( GrTTd ) then
+           Rab0 = cubsum(rvdw(i),rvdw(j))
+           damp =  GrTTfd(A,b0,Rab,Rab0)
+
         end if
 
 !        print*, i,j,Rab,bb,ba,damp ! debug
@@ -356,6 +363,16 @@ CONTAINS
     cubsum = ( a**3 + b**3 ) / ( a**2 + b**3 )
 
   END FUNCTION cubsum
+
+  !Mixed Fermi+TangToennies DF
+  real(kr) FUNCTION  GrTTfd(a,b,R,R0)
+    IMPLICIT NONE
+    real(kr),intent(IN) :: a,b,R,R0
+    
+    GrTTfd = 0.5*( 1 + dtanh( 23.0d0 * ( R / ( a * R0 ) - 1 ) ) ) * fdamp(b,R)
+
+
+  END FUNCTION GrTTfd
 
 END PROGRAM SCC_Disp
   
