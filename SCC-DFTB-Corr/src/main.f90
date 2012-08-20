@@ -215,7 +215,7 @@ PROGRAM SCC_Disp
               hhrep = hCor(A,bab,Rab)
            end if
         elseif( Grd ) then
-           Rab0 = rvdw(i)+rvdw(j)
+           Rab0 = cubsum(rvdw(i),rvdw(j))
            damp = grdamp( b0,1.0d0,1.0d0,Rab,Rab0)
            hhrep = hCor(A,bab,Rab)
         end if
@@ -344,6 +344,14 @@ CONTAINS
 !    print*, "Inside Function: ",hcor, A, b ,R ! debug
     
   END FUNCTION hCor
+
+  real(kr) FUNCTION cubsum(a,b)
+    IMPLICIT NONE
+    real(kr),intent(IN) :: a,b
+    
+    cubsum = ( a**3 + b**3 ) / ( a**2 + b**3 )
+
+  END FUNCTION cubsum
 
 END PROGRAM SCC_Disp
   
