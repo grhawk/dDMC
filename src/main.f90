@@ -223,8 +223,8 @@ PROGRAM SCC_Disp
            end if
         elseif( Grd ) then
            Rab0 = cubsum(rvdw(i),rvdw(j))
-           damp = wy2( b0,1.0d0,Rab,Rab0)
-           hhrep = hCor(A,bab,Rab)
+           damp = wy2( b0,A,Rab,Rab0)
+!           hhrep = hCor(A,bab,Rab)
         elseif( GrTTd ) then
            Rab0 = cubsum(rvdw(i),rvdw(j))
            damp =  GrTTfd(A,b0,Rab,Rab0)
@@ -305,7 +305,7 @@ CONTAINS
     IMPLICIT NONE
     real(kr),intent(IN) :: d,sr,r,r0
     
-    wy2 = 0.5 * ( 1 + tanh( d* r / ( sr*r0 ) -1 ) )
+    wy2 = 0.5 * ( 1 + tanh( 0.5*d* (r / ( sr*r0 ) -1) ) )
     
   END FUNCTION wy2
     
