@@ -370,7 +370,7 @@ CONTAINS
     real(kr),intent(IN) :: a,b,R,R0
     print*, a
 
-    GrTTfd = 0.5*( 1 + dtanh( 23.0d0 * R / ( a * R0 )- 1 ) ) * fdamp(b,R)
+    GrTTfd = 0.5*( 1 + tanh( 23.0d0 * ( R / ( a * R0 ) - 1 ) ) ) * fdamp(b,R)
 
 
   END FUNCTION GrTTfd
