@@ -10,11 +10,11 @@ MODULE ReadInput
   USE precision
   USE string_tools
   IMPLICIT NONE
-  character(64) :: inputtagfile,inputcoofile,atomdatafile,DampFunc
+  character(64) :: inputtagfile,inputcoofile,atomdatafile,DampFunc,debugflag
   real(kr)      :: b0,A
 
   PRIVATE
-  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,b0,A,read_stdin,DampFunc
+  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,b0,A,read_stdin,DampFunc,debugflag
 !  PUBLIC :: 
   
 CONTAINS
@@ -57,6 +57,9 @@ CONTAINS
           case ('df')
              DampFunc = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
+          case ('debugflag')
+             debugflag = trim(adjustl(nojunk(2)))
+             ninput = ninput + 1
           case default
              write(0,*) 'INPUT ERROR IN LINE ',nl
           end select
@@ -64,7 +67,7 @@ CONTAINS
        end if
     end do
     
-    if( ninput /= 6 ) stop 'ERROR: wrong parameters in input'
+    if( ninput /= 7 ) stop 'ERROR: wrong parameters in input'
     
 !    call starting_program_announce
     

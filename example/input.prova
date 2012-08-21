@@ -12,3 +12,7 @@ A = 0.0
 # Gr - 5 in Materials Transaction Vol. 50 pp 1664
 # GrTT - Used by stephan in JCTC 5,2950 (2009)
 df = TTf
+# To write the chage of the atoms in a file set UP
+#debugflag = UP
+debugflag = down
+

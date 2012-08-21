@@ -27,7 +27,7 @@ $(PROG): $(OBJS)
 
 
 file_tools.o: precision.o
-main.o: precision.o read_atomdata.o read_tag_dftbp.o read_xyz.o utils.o parameters.o ReadInput.o
+main.o: precision.o read_atomdata.o read_tag_dftbp.o read_xyz.o utils.o parameters.o ReadInput.o file_tools.o
 read_atomdata.o: file_tools.o precision.o
 read_tag_dftbp.o: file_tools.o precision.o string_tools.o
 read_xyz.o: file_tools.o precision.o
