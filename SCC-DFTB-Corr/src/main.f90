@@ -222,8 +222,8 @@ PROGRAM SCC_Disp
               hhrep = hCor(A,bab,Rab)
            end if
         elseif( Grd ) then
-!           Rab0 = cubsum(rvdw(i),rvdw(j))
-           Rab0 = rvdw(i)+rvdw(j)
+           Rab0 = cubsum(rvdw(i),rvdw(j))
+!           Rab0 = rvdw(i)+rvdw(j)
            damp = wy2( b0,A,Rab,Rab0)
 !           hhrep = hCor(A,bab,Rab)
         elseif( GrTTd ) then
