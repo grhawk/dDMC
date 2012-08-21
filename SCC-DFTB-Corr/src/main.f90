@@ -410,8 +410,8 @@ CONTAINS
     call openfile(filename,'read')
     read(fiit(filename),*,iostat=err) a
     read(fiit(filename),*,iostat=err) b
-    read(fiit(filename),*,iostat=err) n
     read(fiit(filename),*,iostat=err) m
+    read(fiit(filename),*,iostat=err) n
     read(fiit(filename),*,iostat=err) sr
     call closefile(filename)
 !    print*, a,b,n,m,sr,err
