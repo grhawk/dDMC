@@ -34,6 +34,7 @@ PROGRAM SCC_Disp
   logical :: TTdf
   logical :: Grd
   logical :: GrTTd
+  logical :: UDF
 
   logical :: debug
   character(20),parameter :: chrgfile = 'chargefile.dat'
@@ -58,6 +59,8 @@ PROGRAM SCC_Disp
      Grd = .true.
   case('GrTT')
      GrTTd = .true.
+  case('UDF')
+     UDF = .true.
   case default
      write(0,*) "ERROR: Selected Dumping function not found"
      stop
@@ -245,7 +248,11 @@ PROGRAM SCC_Disp
         elseif( GrTTd ) then
            Rab0 = cubsum(rvdw(i),rvdw(j))
            damp =  GrTTfd(A,b0,Rab,Rab0)
-
+        elseif( UDF ) then
+           Rab0 = cubsum(rvdw(i),rvdw(j))
+           damp = UDFf(Rab,Rab0)
+!           hhrep = hCor(A,bab,Rab)
+           hhrep = 0.0d0
         end if
 
 !        print*, i,j,Rab,bb,ba,damp ! debug
@@ -389,8 +396,39 @@ CONTAINS
 
     GrTTfd = 0.5*( 1 + tanh( 23.0d0 * ( R / ( a * R0 ) - 1 ) ) ) * fdamp(b,R)
 
-
   END FUNCTION GrTTfd
+
+
+  real(kr) FUNCTION UDFf(r,r0)
+    IMPLICIT NONE
+    real(kr),intent(IN) :: r,r0
+    real(kr) :: a, b, n, m, sr
+    integer(ki) :: err
+    character(64) :: filename='parameters.dat'
+
+    err = 0
+    call openfile(filename,'read')
+    read(fiit(filename),*,iostat=err) a
+    read(fiit(filename),*,iostat=err) b
+    read(fiit(filename),*,iostat=err) n
+    read(fiit(filename),*,iostat=err) m
+    read(fiit(filename),*,iostat=err) sr
+    call closefile(filename)
+!    print*, a,b,n,m,sr,err
+    if( err /= 0 ) call die('ERROR: reading parameter.dat')
+    
+    UDFf = (1 + a * exp( -b *( r / sr * r0 )**m ) )**n
+    
+  END FUNCTION UDFf
+
+  SUBROUTINE die(msg)
+    IMPLICIT NONE
+    character(*),intent(IN) :: msg
+    
+    write(0,*) msg
+    stop
+    
+  END SUBROUTINE die
 
 END PROGRAM SCC_Disp
   
