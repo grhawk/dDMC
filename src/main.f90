@@ -241,6 +241,7 @@ PROGRAM SCC_Disp
 !           Rab0 = rvdw(i)+rvdw(j)
            damp = wy2( b0,A,Rab,Rab0)
 !           hhrep = hCor(A,bab,Rab)
+           hhrep = 0.0d0
         elseif( GrTTd ) then
            Rab0 = cubsum(rvdw(i),rvdw(j))
            damp =  GrTTfd(A,b0,Rab,Rab0)
