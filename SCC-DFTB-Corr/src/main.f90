@@ -5,6 +5,7 @@ PROGRAM SCC_Disp
   USE read_tag_dftbp
   USE read_xyz
   USE read_atomdata
+  USE file_tools
   USE ReadInput  ! TODO better
   USE parameters, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
@@ -34,6 +35,8 @@ PROGRAM SCC_Disp
   logical :: Grd
   logical :: GrTTd
 
+  logical :: debug
+  character(20),parameter :: chrgfile = 'chargefile.dat'
 
 !  integer(ki) :: b0                                         --> Red from ReadInput
 !  character(30) :: inputtagfile,inputcoofile,atomdatafile   --> Red from ReadInput
@@ -59,6 +62,8 @@ PROGRAM SCC_Disp
      write(0,*) "ERROR: Selected Dumping function not found"
      stop
   end select
+
+  if( debugflag == 'UP' ) debug=.true.
 !  stop ! debug
   ! Mesure Units:
   ! Ni -> Electron fraction
@@ -166,6 +171,16 @@ PROGRAM SCC_Disp
   ! Retrive name of atom
   call get_coords(inputcoofile,natom)
   
+
+  if( debug )then
+     call openfile(chrgfile,'write')
+     do i = 1,natom
+        write(fiit(chrgfile),'(A3,F10.4)') coords(i)%atom_type, Ni(i)
+     end do
+     call closefile(fiit(chrgfile))
+  end if
+
+
   if( Ni_size /= natom ) stop 'ERROR: check 1' ! Controls
   
   ! Compute C6AIM
