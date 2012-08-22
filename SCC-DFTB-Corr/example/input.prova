@@ -11,6 +11,8 @@ A = 0.0
 # TTf - Tang and Toennies: b is fixed at b0 value
 # Gr - 5 in Materials Transaction Vol. 50 pp 1664
 # GrTT - Used by stephan in JCTC 5,2950 (2009)
+# UDF - Universal damping function  
+# NoDF - Avoid to use a damping function
 df = TTf
 # To write the chage of the atoms in a file set UP
 #debugflag = UP
