@@ -46,7 +46,7 @@ CONTAINS
     IMPLICIT NONE  
     character(*),intent(IN) :: file
     integer(ki),intent(OUT) :: natom
-    character(30) :: junk
+    character(kch) :: junk
 
     integer(ki) :: err
     integer(ki) :: i,j,j1,j2

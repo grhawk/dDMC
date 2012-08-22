@@ -5,7 +5,7 @@ MODULE file_tools
 
   TYPE file2unit
      integer(ki) :: unit
-     character*60 :: file
+     character(kch) :: file
   END type file2unit
 
   integer(ki),parameter :: initial_value = 5000    ! First opened file unit - 1
@@ -29,7 +29,7 @@ MODULE file_tools
 
 
 CONTAINS
-  character(maxchar) FUNCTION getfilename(input)
+  character(kch) FUNCTION getfilename(input)
     integer(ki),intent(IN) :: input
     
     integer(ki)  :: i    ! counter
@@ -174,7 +174,7 @@ CONTAINS
 
     end select
 
-10100 format('Error while opening file: ',A30)   
+10100 format('Error while opening file: ',A64)   
     
   END SUBROUTINE errors
   

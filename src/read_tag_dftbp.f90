@@ -21,9 +21,8 @@ MODULE read_tag_dftbp
   IMPLICIT NONE
 
   integer(ki),parameter :: maxrank =  3  ! Maximun rank for matrix (it is not so easy to change)
-  integer(ki),parameter :: maxchar = 30  ! Maximun lenght for strings (At least redefined in declaration of string)
 
-  character(maxchar),dimension(3)       :: form_shrk
+  character(kch),dimension(3)       :: form_shrk
   real(kr),allocatable,dimension(:,:,:),target :: matrix
   integer(ki),target  :: ifrmt(maxrank)
   integer(ki)  :: iu
@@ -38,9 +37,9 @@ CONTAINS
     IMPLICIT NONE
     character(*), intent(in) :: name !name of property (e.g. fillings)
     
-    character(maxchar) :: form
+    character(kch) :: form
     integer(ki) :: nword
-    character(maxchar) :: junk
+    character(kch) :: junk
     integer(ki) :: err
     
     ! This loop looks for the property (name) into the tag file
@@ -95,8 +94,8 @@ CONTAINS
     ! read the data with the right format and
     ! create the variable matrix
     IMPLICIT NONE
-    character(maxchar),intent(IN) :: form_strg
-    character(maxchar) :: frmt(maxrank)
+    character(kch),intent(IN) :: form_strg
+    character(kch) :: frmt(maxrank)
 
     integer(ki) :: junk
     integer(ki) :: i,j,k ! counter

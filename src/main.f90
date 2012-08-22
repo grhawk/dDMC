@@ -38,7 +38,8 @@ PROGRAM SCC_Disp
   logical :: NoDF = .false.
 
   logical :: debug
-  character(20),parameter :: chrgfile = 'chargefile.dat'
+  character(kch),parameter :: chrgfile = 'chargefile.dat'
+  character(kch),parameter :: C6file = 'C6file.dat'
 
 !  integer(ki) :: b0                                         --> Red from ReadInput
 !  character(30) :: inputtagfile,inputcoofile,atomdatafile   --> Red from ReadInput
@@ -178,15 +179,6 @@ PROGRAM SCC_Disp
   call get_coords(inputcoofile,natom)
   
 
-  if( debug )then
-     call openfile(chrgfile,'write')
-     do i = 1,natom
-        write(fiit(chrgfile),'(A3,F10.4)') coords(i)%atom_type, Ni(i)
-     end do
-     call closefile(fiit(chrgfile))
-  end if
-
-
   if( Ni_size /= natom ) stop 'ERROR: check 1' ! Controls
   
   ! Compute C6AIM
@@ -198,8 +190,19 @@ PROGRAM SCC_Disp
      C6free(i,2) = atomdata(findatom(coords(i)%atom_type))%D3C6   ! - C6free by 3D for "   "
      polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3 ! -polar for    "   "
      rvdw(i) = atomdata(findatom(coords(i)%atom_type))%vdWr / BohrAngst ! - Bondi radii
+     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge
   end do
  
+  if( debug )then
+     call openfile(chrgfile,'write')
+     do i = 1,natom
+        write(fiit(chrgfile),'(A3,F20.15)') coords(i)%atom_type, Ni(i)
+     end do
+     call closefile(fiit(chrgfile))
+  end if
+
+
+  
 
 !  write(*,'(I5 /)') (Zaim(i), i = 1,natom) ! debug
 !  write(*,'(f8.3 /)') (C6free(i,1), i = 1,natom) ! debug
@@ -283,8 +286,11 @@ PROGRAM SCC_Disp
            C6ab(2) = 2 * C6aim(i,k) * C6aim(j,k) / &
                 ( ( polar(j) / polar(i) ) * C6aim(i,k) + &
                 ( polar(i) / polar(j) ) * C6aim(j,k) )       ! REL B
+           
+!           write(77,'(2A3,6F20.4)') coords(i)%atom_type, coords(j)%atom_type, C6aim(i,1), C6aim(j,1), C6ab(1),Rab,Rab**6,damp ! debug
 
            E(:,k) =  E(:,k) - damp * C6ab(:) / Rab**6   ! Dispersion Energy
+           
 
            if( Hi .and. Hj ) then
 !              print*, 'HH' ! debug
@@ -296,6 +302,14 @@ PROGRAM SCC_Disp
         end do TSvsD3loop
      end do atom2
   end do atom1
+
+  if (  debug )then
+     call openfile(c6file,'write')
+     do i = 1,natom
+        write(fiit(c6file),'(A3,2F10.4)') coords(i)%atom_type, C6free(i,2), C6aim(i,2)
+     end do
+     call closefile(fiit(c6file))
+  end if
 
   
   ! E(1,:) => Energy of relationa A
@@ -410,7 +424,7 @@ CONTAINS
     real(kr),intent(IN) :: r,r0
     real(kr) :: a, b, n, m, sr
     integer(ki) :: err
-    character(64) :: filename='parameters.dat'
+    character(kch) :: filename='parameters.dat'
 
     err = 0
     call openfile(filename,'read')
