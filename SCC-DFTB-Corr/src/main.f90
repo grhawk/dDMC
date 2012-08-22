@@ -30,12 +30,12 @@ PROGRAM SCC_Disp
 
 !  integer(ki) :: Hctrl,l
   logical :: Hi,Hj
-  logical :: fixb0
-  logical :: TTdf
-  logical :: Grd
-  logical :: GrTTd
-  logical :: UDF
-  logical :: NoDF
+  logical :: fixb0 = .false.
+  logical :: TTdf = .false.
+  logical :: Grd = .false.
+  logical :: GrTTd = .false.
+  logical :: UDF = .false.
+  logical :: NoDF = .false.
 
   logical :: debug
   character(20),parameter :: chrgfile = 'chargefile.dat'
