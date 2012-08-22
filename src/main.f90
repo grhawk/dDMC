@@ -35,6 +35,7 @@ PROGRAM SCC_Disp
   logical :: Grd
   logical :: GrTTd
   logical :: UDF
+  logical :: NoDF
 
   logical :: debug
   character(20),parameter :: chrgfile = 'chargefile.dat'
@@ -61,6 +62,8 @@ PROGRAM SCC_Disp
      GrTTd = .true.
   case('UDF')
      UDF = .true.
+  case('NoDF')
+     NoDF = .true.
   case default
      write(0,*) "ERROR: Selected Dumping function not found"
      stop
@@ -252,6 +255,9 @@ PROGRAM SCC_Disp
            Rab0 = cubsum(rvdw(i),rvdw(j))
            damp = UDFf(Rab,Rab0)
 !           hhrep = hCor(A,bab,Rab)
+           hhrep = 0.0d0
+        elseif( NoDF )then
+           damp = 1.0d0
            hhrep = 0.0d0
         end if
 
