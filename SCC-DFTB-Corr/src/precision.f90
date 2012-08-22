@@ -8,6 +8,6 @@ MODULE precision
   integer, parameter :: kc4 = kr4                            
   integer, parameter :: kc8 = kr8                            
   ! generic kinds
-  integer, parameter :: ki=ki4,kr=kr8,kc=kc8
+  integer, parameter :: ki=ki4,kr=kr8,kc=kc8,kch=64
   
 END MODULE precision

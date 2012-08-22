@@ -1,7 +1,7 @@
 MODULE string_tools
   USE precision
   IMPLICIT NONE
-  character(30),parameter :: module_name = 'string_tools'  ! For Error subroutine
+  character(kch),parameter :: module_name = 'string_tools'  ! For Error subroutine
 
   integer(ki),parameter :: maxchars=100  ! Max character per string
   integer(ki),parameter :: maxwords=100  ! Max word per string

@@ -12,6 +12,7 @@ MODULE read_atomdata
      real(kr)     :: D3C6
 ! Covalent radius
      real(kr)     :: vdWr
+     real(kr)     :: incharge    !innershell electron number
   end type atomdata_type
   type(atomdata_type),allocatable,target :: atomdata(:)
 
@@ -32,7 +33,7 @@ CONTAINS
   SUBROUTINE get_atomdata(file)
     IMPLICIT NONE
     character(*),intent(IN) :: file
-    character(1) :: junk
+    character(kch) :: junk
     integer(ki) :: natom,err,nl
     integer(ki) :: i
 
@@ -83,6 +84,14 @@ CONTAINS
        atomdata%Z = (/ 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20&
             &,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40&
             &,41,42,43,44,45,46,47,48,49,50,51,52,53,54 /)
+
+       do i = 1,54
+          if( i <= 2 )                atomdata(i)%incharge = 0
+          if( i >  2 .and. i <= 10 )  atomdata(i)%incharge = 2
+          if( i > 10 .and. i <= 18 )  atomdata(i)%incharge = 10
+          if( i > 18 .and. i <= 36 )  atomdata(i)%incharge = 18
+          if( i > 26 .and. i <= 54 )  atomdata(i)%incharge = 36
+       end do
 
        atomdata%atom_type = (/ "H", "He", "Li", "Be", "B", "C", "N", "&
             &O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "A&

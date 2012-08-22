@@ -10,7 +10,7 @@ MODULE ReadInput
   USE precision
   USE string_tools
   IMPLICIT NONE
-  character(64) :: inputtagfile,inputcoofile,atomdatafile,DampFunc,debugflag
+  character(kch) :: inputtagfile,inputcoofile,atomdatafile,DampFunc,debugflag
   real(kr)      :: b0,A
 
   PRIVATE
@@ -21,7 +21,7 @@ CONTAINS
   
   SUBROUTINE read_stdin
     IMPLICIT NONE
-    character(64) :: junk,nojunk(2)
+    character(kch) :: junk,nojunk(2)
     integer(ki) :: err,i,nstring,ninput,nl
 
     nl = 0; ninput = 0
