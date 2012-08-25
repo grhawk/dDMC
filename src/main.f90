@@ -246,13 +246,14 @@ PROGRAM SCC_Disp
               hhrep = hCor(A,bab,Rab)
            end if
         elseif( Grd ) then
-          Rab0 = cubsum(rvdw(i),rvdw(j))
-!           Rab0 = rvdw(i)+rvdw(j)
+!          Rab0 = cubsum(rvdw(i),rvdw(j))
+           Rab0 = rvdw(i)+rvdw(j)
            damp = wy2( b0,A,Rab,Rab0)
 !           hhrep = hCor(A,bab,Rab)
            hhrep = 0.0d0
         elseif( GrTTd ) then
-           Rab0 = cubsum(rvdw(i),rvdw(j))
+!           Rab0 = cubsum(rvdw(i),rvdw(j))
+           Rab0 = rvdw(i)+rvdw(j)
            damp =  GrTTfd(A,b0,Rab,Rab0)
         elseif( UDF ) then
            Rab0 = cubsum(rvdw(i),rvdw(j))
@@ -437,7 +438,7 @@ CONTAINS
 !    print*, a,b,n,m,sr,err
     if( err /= 0 ) call die('ERROR: reading parameter.dat')
     
-    UDFf = (1 + a * exp( -b *( r / sr * r0 )**m ) )**n
+    UDFf = (1 + exp(a) * exp( -b *( r / sr * r0 )**m ) )**n
     
   END FUNCTION UDFf
 
