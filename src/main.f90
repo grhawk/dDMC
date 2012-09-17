@@ -35,7 +35,8 @@ PROGRAM SCC_Disp
   logical :: Grd = .false.
   logical :: GrTTd = .false.
   logical :: UDF = .false.
-  logical :: NoDF = .false.
+  logical :: NoDF = .false.  
+  logical :: GrD3F = .false.
 
   logical :: debug
   character(kch),parameter :: chrgfile = 'chargefile.dat'
@@ -65,6 +66,8 @@ PROGRAM SCC_Disp
      UDF = .true.
   case('NoDF')
      NoDF = .true.
+  case('GrD3')
+     GrD3F = .true.
   case default
      write(0,*) "ERROR: Selected Dumping function not found"
      stop
@@ -190,13 +193,14 @@ PROGRAM SCC_Disp
      C6free(i,2) = atomdata(findatom(coords(i)%atom_type))%D3C6   ! - C6free by 3D for "   "
      polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3 ! -polar for    "   "
      rvdw(i) = atomdata(findatom(coords(i)%atom_type))%vdWr / BohrAngst ! - Bondi radii
+!     print*, Zaim(i)
      Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge
   end do
  
   if( debug )then
      call openfile(chrgfile,'write')
      do i = 1,natom
-        write(fiit(chrgfile),'(A3,F20.15)') coords(i)%atom_type, Ni(i)
+        write(fiit(chrgfile),'(A3,3F20.5,I10)') coords(i)%atom_type, Ni(i),atomdata(findatom(coords(i)%atom_type))%incharge,atomdata(findatom(coords(i)%atom_type))%incharge,Zaim(i)
      end do
      call closefile(fiit(chrgfile))
   end if
@@ -246,19 +250,24 @@ PROGRAM SCC_Disp
               hhrep = hCor(A,bab,Rab)
            end if
         elseif( Grd ) then
-!          Rab0 = cubsum(rvdw(i),rvdw(j))
-           Rab0 = rvdw(i)+rvdw(j)
+          Rab0 = cubsum(rvdw(i),rvdw(j))
+!           Rab0 = rvdw(i)+rvdw(j)
            damp = wy2( b0,A,Rab,Rab0)
 !           hhrep = hCor(A,bab,Rab)
            hhrep = 0.0d0
         elseif( GrTTd ) then
-!           Rab0 = cubsum(rvdw(i),rvdw(j))
-           Rab0 = rvdw(i)+rvdw(j)
-           damp =  GrTTfd(A,b0,Rab,Rab0)
+           Rab0 = cubsum(rvdw(i),rvdw(j))
+!           Rab0 = rvdw(i)+rvdw(j)
+           damp =  GrTTfd(Rab,Rab0)
+           hhrep = 0.0d0
         elseif( UDF ) then
            Rab0 = cubsum(rvdw(i),rvdw(j))
            damp = UDFf(Rab,Rab0)
 !           hhrep = hCor(A,bab,Rab)
+           hhrep = 0.0d0
+        elseif( GrD3F ) then
+           Rab0 = cubsum(rvdw(i),rvdw(j))
+           damp = D3df(Rab,Rab0)
            hhrep = 0.0d0
         elseif( NoDF )then
            damp = 1.0d0
@@ -288,7 +297,7 @@ PROGRAM SCC_Disp
                 ( ( polar(j) / polar(i) ) * C6aim(i,k) + &
                 ( polar(i) / polar(j) ) * C6aim(j,k) )       ! REL B
            
-!           write(77,'(2A3,6F20.4)') coords(i)%atom_type, coords(j)%atom_type, C6aim(i,1), C6aim(j,1), C6ab(1),Rab,Rab**6,damp ! debug
+           if( debug ) write(77,'(2A3,11F20.4)') coords(i)%atom_type, coords(j)%atom_type,Ni(i),dfloat(Zaim(i)),Ni(j),dfloat(Zaim(j)), C6aim(i,1), C6aim(j,1), C6ab(1),Rab,Rab**6,damp,-damp/Rab**6 ! debug
 
            E(:,k) =  E(:,k) - damp * C6ab(:) / Rab**6   ! Dispersion Energy
            
@@ -344,13 +353,26 @@ PROGRAM SCC_Disp
 !  write(*,*) coords      ! debug
 CONTAINS
   
+!!$  real(kr) FUNCTION wy2(d,sr,r,r0)
+!!$    ! Grimme damping function 
+!!$    ! Material Transaction vol. 50 pagg 1664-1670 Corrected with Stephan's supporting information
+!!$    IMPLICIT NONE
+!!$    real(kr),intent(IN) :: d,sr,r,r0
+!!$    
+!!$    wy2 = 0.5 * ( 1 + tanh( 0.5*d* (r / ( sr*r0 ) -1) ) )
+!!$    
+!!$  END FUNCTION wy2
+
   real(kr) FUNCTION wy2(d,sr,r,r0)
     ! Grimme damping function 
     ! Material Transaction vol. 50 pagg 1664-1670 Corrected with Stephan's supporting information
     IMPLICIT NONE
-    real(kr),intent(IN) :: d,sr,r,r0
+    real(kr),intent(IN) :: r,r0
+    real(kr) :: d,sr
+
+    CALL read_parameters(d,sr)
     
-    wy2 = 0.5 * ( 1 + tanh( 0.5*d* (r / ( sr*r0 ) -1) ) )
+    wy2 = 0.5 * ( 1 + tanh( d* (r / ( sr*r0 ) -1) ) )
     
   END FUNCTION wy2
     
@@ -405,17 +427,29 @@ CONTAINS
     IMPLICIT NONE
     real(kr),intent(IN) :: a,b
     
-    cubsum = 2*( a**3 + b**3 ) / ( a**2 + b**3 )
+    cubsum = 2*( a**3 + b**3 ) / ( a**2 + b**2 )
 
   END FUNCTION cubsum
 
   !Mixed Fermi+TangToennies DF
-  real(kr) FUNCTION  GrTTfd(a,b,R,R0)
-    IMPLICIT NONE
-    real(kr),intent(IN) :: a,b,R,R0
-    print*, a
+!!$  real(kr) FUNCTION  GrTTfd(a,b,R,R0)
+!!$    IMPLICIT NONE
+!!$    real(kr),intent(IN) :: a,b,R,R0
+!!$    print*, a
+!!$
+!!$    GrTTfd = 0.5*( 1 + tanh( 23.0d0 * ( R / ( a * R0 ) - 1 ) ) ) * fdamp(b,R)
+!!$
+!!$  END FUNCTION GrTTfd
 
-    GrTTfd = 0.5*( 1 + tanh( 23.0d0 * ( R / ( a * R0 ) - 1 ) ) ) * fdamp(b,R)
+  real(kr) FUNCTION  GrTTfd(R,R0)
+    IMPLICIT NONE
+    real(kr) :: a,b,s,R,R0
+!    print*, a
+
+    CALL read_parameters(b0,a,s)
+
+    GrTTfd = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) ) &
+         * ( 1.d0 - exp( -b0 * R ) * (1.d0 + b0*R + (b0*R)**2.d0/2.d0 + (b0*R)**3.d0/6.d0 + (b0*R)**4.d0/24.d0 + (b0*R)**5.d0/120.d0 + (b0*R)**6.d0/720.d0))
 
   END FUNCTION GrTTfd
 
@@ -424,6 +458,32 @@ CONTAINS
     IMPLICIT NONE
     real(kr),intent(IN) :: r,r0
     real(kr) :: a, b, n, m, sr
+
+    CALL read_parameters(a,b,m,n,sr)
+
+!           ( 1 + exp(a) * exp( -b * ( r / ( sr * r0 ) )**m) )**un
+    UDFf = ( 1 + exp(a) * exp( -b * ( r / ( sr * r0 ) )**m) )**(-n)
+    
+  END FUNCTION UDFf
+
+  real(kr) FUNCTION D3df(r,r0)
+    IMPLICIT NONE
+    real(kr),intent(IN) :: r,r0
+    real(kr) :: a, b
+
+    CALL read_parameters(a,b)
+!    a=10
+!    b=20
+!           ( 1 + exp(a) * exp( -b * ( r / ( sr * r0 ) )**m) )**un
+    D3df = 1 / ( 1 + 6 * ( r / ( a * 2 * r0 ))**(-b) )
+    
+  END FUNCTION D3df
+
+
+  SUBROUTINE read_parameters(a,b,c,d,e)
+    IMPLICIT NONE
+    real(kr),intent(OUT) :: a,b
+    real(kr),intent(OUT),optional :: c,d,e
     integer(ki) :: err
     character(kch) :: filename='parameters.dat'
 
@@ -431,16 +491,15 @@ CONTAINS
     call openfile(filename,'read')
     read(fiit(filename),*,iostat=err) a
     read(fiit(filename),*,iostat=err) b
-    read(fiit(filename),*,iostat=err) m
-    read(fiit(filename),*,iostat=err) n
-    read(fiit(filename),*,iostat=err) sr
+    if( present(c) ) read(fiit(filename),*,iostat=err) c
+    if( present(d) ) read(fiit(filename),*,iostat=err) d
+    if( present(e) ) read(fiit(filename),*,iostat=err) e
     call closefile(filename)
-!    print*, a,b,n,m,sr,err
-    if( err /= 0 ) call die('ERROR: reading parameter.dat')
+!    write(0,*), a,b,n,m,sr,err
+    if( err /= 0 ) call die('ERROR: reading parameters.dat')
+
+  END SUBROUTINE read_parameters
     
-    UDFf = (1 + exp(a) * exp( -b *( r / sr * r0 )**m ) )**n
-    
-  END FUNCTION UDFf
 
   SUBROUTINE die(msg)
     IMPLICIT NONE
