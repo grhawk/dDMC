@@ -4,18 +4,13 @@ MODULE utils
   
 CONTAINS
   real(kr) FUNCTION dist(r1,r2)
-!    USE precision
     IMPLICIT NONE
     real(kr),intent(IN),dimension(3) :: r1,r2
-    real(kr),dimension(3,2) :: r12
     integer(ki) :: i
-    
-    r12(:,1) = r1(:)
-    r12(:,2) = r2(:)
 
+    dist=0.0d0
     do i = 1,3
-       dist = dist + ( r12(i,1) - r12(i,2) ) **2
-!       print*, dist  ! debug
+       dist = dist + ( r1(i) - r2(i) )**2
     end do
 
     dist = sqrt(dist)

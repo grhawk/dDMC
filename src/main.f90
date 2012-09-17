@@ -9,7 +9,9 @@ PROGRAM SCC_Disp
   USE ReadInput  ! TODO better
   USE parameters, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
+
   integer(ki) :: natom
+  real(kr) :: E,C6ab,Rab0,Rab,damp,hhrep
 
   type(xyz_coords),pointer :: mol1(:),mol2(:)
 
@@ -17,159 +19,24 @@ PROGRAM SCC_Disp
   real(kr),dimension(:),pointer :: Ni
 
   integer(ki),dimension(:),allocatable:: Zaim
-  real(kr),dimension(:,:),allocatable :: C6aim,C6free
+  real(kr),dimension(:),allocatable :: C6aim,C6free
   real(kr),dimension(:),allocatable :: polar,rvdw
 
+  integer(ki) :: i,j
 
-  real(kr),dimension(2,2) :: E
-  real(kr),dimension(2)  :: C6ab
-  
-  real(kr) :: Rab0,Rab,ba,bb,bab,damp,hhrep
-
-  integer(ki) :: i,j,k
-
-!  integer(ki) :: Hctrl,l
   logical :: Hi,Hj
-  logical :: fixb0 = .false.
-  logical :: TTdf = .false.
-  logical :: Grd = .false.
-  logical :: GrTTd = .false.
-  logical :: UDF = .false.
-  logical :: NoDF = .false.  
-  logical :: GrD3F = .false.
 
   logical :: debug
-  character(kch),parameter :: chrgfile = 'chargefile.dat'
-  character(kch),parameter :: C6file = 'C6file.dat'
-
-!  integer(ki) :: b0                                         --> Red from ReadInput
-!  character(30) :: inputtagfile,inputcoofile,atomdatafile   --> Red from ReadInput
-  
-!  b0 = 1
-!  inputtagfile = 'results.tag'
-!  inputcoofile = '91.xyz'
-!  atomdatafile = 'atomdata.data'
+  character(kch),parameter :: chrgfile = 'chargefile.check'
+  character(kch),parameter :: coordfile = 'coordinate.check'
+  character(kch),parameter :: C6aimfile = 'C6aim.check'
+  character(kch),parameter :: C6file = 'C6file.check'
+  character(kch),parameter :: energydbg = 'energyloop.check'
+  character(kch),parameter :: distances = 'distances.check'
 
   call read_stdin
-!  print*, '#',trim(adjustl(DampFunc)),'#'
-  select case ( DampFunc )
-  case('TT') 
-     TTdf = .true.
-  case('TTf')
-     TTdf = .true.
-     fixb0 = .true.
-  case('Gr')
-     Grd = .true.
-  case('GrTT')
-     GrTTd = .true.
-  case('UDF')
-     UDF = .true.
-  case('NoDF')
-     NoDF = .true.
-  case('GrD3')
-     GrD3F = .true.
-  case default
-     write(0,*) "ERROR: Selected Dumping function not found"
-     stop
-  end select
 
   if( debugflag == 'UP' ) debug=.true.
-!  stop ! debug
-  ! Mesure Units:
-  ! Ni -> Electron fraction
-  ! Coordinates -> Angstrom
-  ! Polarizability -> Angstrom^3
-  ! C6 coefficients -> Atomic Units
-  !
-  ! So I think the most simple thing is 
-  ! transform all dimension in atomic
-  ! units and, maybe, convert energy from 
-  ! Hartree/molecule in Kcal/mol
-
-  ! Compute weights
-  !
-  !     W_i = N_i / Z_i
-  !
-  !
-  ! Compute C6AIM
-  !
-  !     C6AIM = W_i * C6FREE
-  !
-  !
-  ! Compute C6BIAT
-  !
-  !     C6_AB = 2 * (C6_A * C6_B) / (C6_A + C6_B)
-  !
-  !
-  ! Compute Energy
-  ! 
-  !    E_disp = sum_A sum_B>A F_damp (C6_AB / R_AB)
-  !
-  ! Which F_damp??
-  ! In TS's paper, is used a Fermi-type damping function:
-  !
-  !  f_damp = (1 + exp[ -d(R_ab/s*R0_ab -1)])^-1
-  !
-  ! They do a strange discussion about the way to choose R0_ab and R_ab
-  ! saying that the VdW by Bondi are radii for AIM and so we should not
-  ! use this as Radii for free atoms. 
-  ! Speaking with Stephan, "I" decided that it could be simpler start with 
-  ! simpler damping function: I will use as first Fdamp the one present in 
-  ! J Chem Teory Comp 7 3567 and called f_2n little modified: b(x) is defined as
-  ! F(x)*b_ij_asym while I assume F(x) = 1. At the end, I have:
-  ! 
-  ! f_dump_2n = 1 - exp(-x) * sum_k=0^2n x^k / k!
-  ! 
-  ! where
-  !
-  ! x = b_ij,asym * R_ij
-  !
-  ! where
-  ! 
-  ! b_ij,asym = 2 * b_ii,asym * b_jj,asym /( b_ii,asym + b_jj,asym )
-  !
-  ! where
-  ! 
-  ! b_ii,asym = b_0 * ( 1 / alpha_i,free)^(1/3) * ( V_i,free / V_i,AIM)^(1/3)
-  !
-  ! the last term, in this case, will be substituited by the "weight" calculated
-  ! in this routine:
-  !
-  ! V_i,free / V_i,AIM = Z_i / N_i (see above)
-  !
-  ! The descibed dumping function don't work well for hydrogen interaction. A known
-  ! issue of SCC-DFTB is the overbinding of hydrogen system (see Hobza JCTC 8 (2012), 141).
-  ! In order to obtain better result, I use a more complex damping function, 
-  ! provided from Tang and Tonnies (J. Chem. Phys. 80 (1984), 8) so that at the end
-  ! the energy is:
-  ! 
-  ! E'_disp = A * exp( x ) * E_disp
-  !
-  ! where E_disp and x are defined before, while A is a parameter that should be
-  ! optimized. Indeed this correction will be used to compute energy only between
-  ! H atoms. For all other couples I will use the previous equation for energy: E_disp.
-
-  ! If I would reduce memory consumption, I can compute the C6AIM 
-  ! on-the-fly while I compute energy... In this first version I don't 
-  ! want to worry about memory consumption... also because I have only 
-  ! very little molecules.
-
-  
-
-  !!!!!!!!!!!!!!! COMPUTE WEIGHTS & C6AIM !!!!!!!!!!!!!!!!
-
-  ! Retriving data from results.tag
-  ! + When the spin polarization is used in the calculation with 
-  ! + dftb+, the atomic charges are spanned on a matrix of dimension
-  ! + natom x 2. Doing some test about the value in the second column, 
-  ! + I realized that only the first column is important: I compared the
-  ! + value of "Net atomic charges" in the detailed.out file with the
-  ! + values in the matrix. I have seen that only the values in the first
-  ! + column are coerent with the value in detailed.out. I'm sure that the 
-  ! + called "Net atomic charges" are independent from spin polarization because
-  ! + I obtained the same value summing the electronic popolutaion of each spin.
-  ! + These values of electronic population are present below, still in the 
-  ! + detailed.out file.
 
   call get_tag_data('atomic_charges',inputtagfile) 
   Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
@@ -178,205 +45,109 @@ PROGRAM SCC_Disp
   ! Retrieve data form atomdata.data
   call get_atomdata(atomdatafile) ! Now I can use the atomdata array
   
-  ! Retrive name of atom
+  ! Retrive name of atoms
   call get_coords(inputcoofile,natom)
   
 
   if( Ni_size /= natom ) stop 'ERROR: check 1' ! Controls
   
-  ! Compute C6AIM
-  allocate(C6aim(natom,2),C6free(natom,2),Zaim(natom),polar(natom),rvdw(natom))
 
+  ! => Initialize arrays
+  allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom))
   do i = 1,natom                                                  ! Some useful arrays:
      Zaim(i) = atomdata(findatom(coords(i)%atom_type))%Z          ! - Z_i of atoms in xyz file
-     C6free(i,1) = atomdata(findatom(coords(i)%atom_type))%TSC6   ! - C6free by TS for "   "
-     C6free(i,2) = atomdata(findatom(coords(i)%atom_type))%D3C6   ! - C6free by 3D for "   "
+     C6free(i) = atomdata(findatom(coords(i)%atom_type))%D3C6   ! - C6free by 3D for "   "
      polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3 ! -polar for    "   "
      rvdw(i) = atomdata(findatom(coords(i)%atom_type))%vdWr / BohrAngst ! - Bondi radii
-!     print*, Zaim(i)
      Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge
   end do
  
   if( debug )then
-     call openfile(chrgfile,'write')
+     call openfile(chrgfile,'replace')
+     call openfile(coordfile,'replace')
+     write(fiit(chrgfile),*) '# ATOM_TYPE  MULL_POP   INCHARGE   Z   RvdW  C6free'
+     write(fiit(coordfile),*) natom
+     write(fiit(coordfile),*)
      do i = 1,natom
-        write(fiit(chrgfile),'(A3,3F20.5,I10)') coords(i)%atom_type, Ni(i),atomdata(findatom(coords(i)%atom_type))%incharge,atomdata(findatom(coords(i)%atom_type))%incharge,Zaim(i)
+        write(fiit(chrgfile),'(A3,2F15.5,I10,2F20.5)') coords(i)%atom_type, Ni(i),atomdata(findatom(coords(i)%atom_type))%incharge,Zaim(i),rvdw(i),C6free(i)
+        write(fiit(coordfile),'(A3,3F15.5)') coords(i)%atom_type, coords(i)%coord
      end do
      call closefile(fiit(chrgfile))
+     call closefile(fiit(coordfile))
   end if
 
 
   
 
-!  write(*,'(I5 /)') (Zaim(i), i = 1,natom) ! debug
-!  write(*,'(f8.3 /)') (C6free(i,1), i = 1,natom) ! debug
-!  write(*,'(f8.3 /)') (C6free(i,2), i = 1,natom) ! debug
-
-  
   ! => C6AIM
-  do i = 1,2                                                     ! Compute the C6aim form
-     C6aim(:,i) = (Ni(:) / dble(Zaim(:)))**2 * C6free(:,i)                  ! both: TS and 3D
-  end do                                                         ! 1 = TS ; 2 = 3D
-
-!  write(*,'(f8.3 /)') (C6eff(i,1), i = 1,natom) ! debug
-!  write(*,'(f8.3 /)') (C6eff(i,2), i = 1,natom) ! debug
+  C6aim(:) = (Ni(:) / dble(Zaim(:)))**2 * C6free(:)                  ! D3
   
+  if( debug )then
+     call openfile(C6aimfile,'replace')
+     write(fiit(C6aimfile),*) '# ATOM_TYPE   MULL_POP   Z   N/Z  (N/Z)**2  C6aim   C6free'
+     do i = 1,natom
+        write(fiit(C6aimfile),'(A3,F12.4,I6,4F12.4)') coords(i)%atom_type,Ni(i),Zaim(i),(Ni(i) / dble(Zaim(i))),(Ni(i) / dble(Zaim(i)))**2,C6aim(i),C6free(i)
+!        write(fiit(C6aimfile),*) coords(i)%atom_type,Ni(i),Zaim(i),(Ni(:) / dble(Zaim(:))),(Ni(:) / dble(Zaim(:)))**2,C6aim(i),C6free(i)
+     end do
+     call closefile(fiit(C6aimfile))
+  end if
 
 
-
-  !!!!!!!!!!!!!!! COMPUTE C6BIAT & ENERGY !!!!!!!!!!!!!!!!
+  ! ==> STARTING ATOMIC LOOP <== !
+  if( debug ) call openfile(energydbg,'replace')
+  if( debug ) write(fiit(energydbg),*) '# AT_TP(i)    AT_TP(j)    Rab    Rab0    damp   C6(i)   C6(j)  C6ab    E   Etot'
+  if( debug ) call openfile(distances,'replace')
+  if( debug ) write(fiit(distances),*) '# AT_TP(i)    AT_TP(j)    xi   yi   zi   xj   yj    zj Rab'
 
   E = 0.0
-  atom1: do i = 1,natom
-     Hi = IsHAtom(i)
-     atom2: do j = i+1,natom
-        Hj = IsHAtom(j)
+  atom1: do i = 1,natom/2
+     Hi = IsHAtom(i) ! To use hhrep
+     atom2: do j = natom/2+1,natom
+        Hj = IsHAtom(j) ! To use hhrep
+        
         Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
         
-        if( TTdf ) then
-!           write(0,*) 'TTdf TRUE' ! debug
-           if( fixb0 ) then
+        Rab0 = cubsum(rvdw(i),rvdw(j))
+        !Rab0 = rvdw(i)+rvdw(j)
+        damp =  GrTTfd(Rab,Rab0)
+!        write(77,*) damp
+!        damp = 1.d0
+        hhrep = 0.0d0
 
-!           write(0,*) 'b0fixed TRUE' ! debug
-              
-              damp = fdamp(b0,Rab)
-              hhrep = hCor(A,b0,Rab)
-           else
-!           write(0,*) 'b0fixed FAlse' ! debug
-              ba = basym(b0,polar(i),Ni(i),Zaim(i))
-              bb = basym(b0,polar(j),Ni(j),Zaim(j))
-              bab = bmix(ba,bb)
-              damp = fdamp(bab,Rab)
-              hhrep = hCor(A,bab,Rab)
-           end if
-        elseif( Grd ) then
-          Rab0 = cubsum(rvdw(i),rvdw(j))
-!           Rab0 = rvdw(i)+rvdw(j)
-           damp = wy2( b0,A,Rab,Rab0)
-!           hhrep = hCor(A,bab,Rab)
-           hhrep = 0.0d0
-        elseif( GrTTd ) then
-           Rab0 = cubsum(rvdw(i),rvdw(j))
-!           Rab0 = rvdw(i)+rvdw(j)
-           damp =  GrTTfd(Rab,Rab0)
-           hhrep = 0.0d0
-        elseif( UDF ) then
-           Rab0 = cubsum(rvdw(i),rvdw(j))
-           damp = UDFf(Rab,Rab0)
-!           hhrep = hCor(A,bab,Rab)
-           hhrep = 0.0d0
-        elseif( GrD3F ) then
-           Rab0 = cubsum(rvdw(i),rvdw(j))
-           damp = D3df(Rab,Rab0)
-           hhrep = 0.0d0
-        elseif( NoDF )then
-           damp = 1.0d0
-           hhrep = 0.0d0
+        
+        ! => Mixing C6aim (REL. A)
+        C6ab = 2 * C6aim(i) * C6aim(j) / ( C6aim(i) + C6aim(j) )
+        
+        
+        E =  E - damp * C6ab / Rab**6   ! Dispersion Energy
+           
+        if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, damp, C6aim(i), C6aim(j), C6ab, damp * C6ab / Rab**6, E
+        if( debug ) write(fiit(distances),'(2A3,2X,7(X,F15.5))') coords(i)%atom_type, coords(j)%atom_type, coords(i)%coord, coords(j)%coord, Rab
+        
+        if( Hi .and. Hj ) then
+           E = E + hhrep  ! HH-repulsion correction
         end if
 
-!        print*, i,j,Rab,bb,ba,damp ! debug
-!        print*, Rab, i ,j,coords(i)%coord,coords(j)%coord ! debug
-!        stop ! debug 
-           
-!!$        Hctrl = 0
-!!$        do l = 1,2
-!!$           if( coords(i)%atom_type == HAtom(l) ) Hctrl = Hctrl + 1
-!!$           if( coords(j)%atom_type == HAtom(l) ) Hctrl = Hctrl + 1
-!!$           write(0,*) coords(j)%atom_type, coords(i)%atom_type,Hctrl ! debug
-!!$           if( Hctrl == 2 ) write(0,*) "Hydrogen Atom Couple" ! debug
-!!$           if( Hctrl > 2 )  write(0,*) "Huston, we have a problem!!" ! debug
-!!$        end do
-!        write(0,*) coords(j)%atom_type, coords(i)%atom_type,Hi,Hj ! debug
-!        if( Hi .and. Hj ) write(0,*) "Hydrogen Atom Couple" ! debug
-
-
-        TSvsD3loop : do k = 1,2  ! 1 => TS ; 2 => D3
-           C6ab(1) = 2 * C6aim(i,k) * C6aim(j,k) / &
-                ( C6aim(i,k) + C6aim(j,k) )                  ! REL A
-           C6ab(2) = 2 * C6aim(i,k) * C6aim(j,k) / &
-                ( ( polar(j) / polar(i) ) * C6aim(i,k) + &
-                ( polar(i) / polar(j) ) * C6aim(j,k) )       ! REL B
-           
-           if( debug ) write(77,'(2A3,11F20.4)') coords(i)%atom_type, coords(j)%atom_type,Ni(i),dfloat(Zaim(i)),Ni(j),dfloat(Zaim(j)), C6aim(i,1), C6aim(j,1), C6ab(1),Rab,Rab**6,damp,-damp/Rab**6 ! debug
-
-           E(:,k) =  E(:,k) - damp * C6ab(:) / Rab**6   ! Dispersion Energy
-           
-
-           if( Hi .and. Hj ) then
-!              print*, 'HH' ! debug
-!              print*, "E before: ", E(:,k) ! debug
-              E(:,k) = E(:,k) + hhrep  ! HH-repulsion correction
-!              print*, "E after: ", E(:,k) ! debug
-           end if
-
-        end do TSvsD3loop
      end do atom2
   end do atom1
 
+  if( debug ) call closefile(energydbg)
+  if( debug ) call closefile(distances)
+
   if (  debug )then
-     call openfile(c6file,'write')
+     call openfile(c6file,'replace')
      do i = 1,natom
-        write(fiit(c6file),'(A3,2F10.4)') coords(i)%atom_type, C6free(i,2), C6aim(i,2)
+        write(fiit(c6file),'(A3,2F10.4)') coords(i)%atom_type, C6free(i), C6aim(i)
      end do
      call closefile(fiit(c6file))
   end if
 
   
-  ! E(1,:) => Energy of relationa A
-  ! E(2,:) => Energy of relationa B
-  ! E(:,1) => Energy from TS
-  ! E(:,2) => Energy from D3
+!  write(*,'(f20.12)') E*HartKcalMol
+  write(*,'(f20.12)') E
 
-! The results have to be in Hartree to be consistent with DFTB+. 
-  write(*,*) '#  ',inputcoofile
-  write(*,'("A-TS  ",f20.12)') E(1,1)
-  write(*,'("A-D3  ",f20.12)') E(1,2)
-  write(*,'("B-TS  ",f20.12)') E(2,1)
-  write(*,'("B-D3  ",f20.12)') E(2,2)
-
-!!$  do i = 1,100     ! debug
-!!$     !     write(0,*) bab,bb,ba      ! debug
-!!$     kkk =  fdamp(1d0,dble(i)/10)     ! debug
-!!$     print*, kkk     ! debug
-!!$     !     write(*,*) fdamp(dble(1),dble(i/10))     ! debug
-!!$  end do
-
-
-  
-!  do i = 1,natom/2       ! debug
-!     r12 = dist(mol1(i)%coord,mol2(j)%coord)      ! debug
-!  end do      ! debug
-
-
-!  call getdata('atomic_charges','results.tag')      ! debug
-! write(*,*) (((matrix(i,j,k), i=1,ifrmt(1)),j=1,ifrmt(2)),k=1,ifrmt(3))      ! debug
-!  write(*,*) coords      ! debug
 CONTAINS
   
-!!$  real(kr) FUNCTION wy2(d,sr,r,r0)
-!!$    ! Grimme damping function 
-!!$    ! Material Transaction vol. 50 pagg 1664-1670 Corrected with Stephan's supporting information
-!!$    IMPLICIT NONE
-!!$    real(kr),intent(IN) :: d,sr,r,r0
-!!$    
-!!$    wy2 = 0.5 * ( 1 + tanh( 0.5*d* (r / ( sr*r0 ) -1) ) )
-!!$    
-!!$  END FUNCTION wy2
-
-  real(kr) FUNCTION wy2(d,sr,r,r0)
-    ! Grimme damping function 
-    ! Material Transaction vol. 50 pagg 1664-1670 Corrected with Stephan's supporting information
-    IMPLICIT NONE
-    real(kr),intent(IN) :: r,r0
-    real(kr) :: d,sr
-
-    CALL read_parameters(d,sr)
-    
-    wy2 = 0.5 * ( 1 + tanh( d* (r / ( sr*r0 ) -1) ) )
-    
-  END FUNCTION wy2
-    
-
   real(kr) FUNCTION bmix(bi,bj)
     IMPLICIT NONE
     real(kr),intent(IN) :: bi,bj
@@ -397,23 +168,6 @@ CONTAINS
     
   END FUNCTION basym
   
-  real(kr) FUNCTION fdamp(b,R)
-    IMPLICIT NONE
-    real(kr),intent(IN) :: b,R
-!    real(kr) :: asd
-    integer(ki) :: i
-
-    fdamp = 0.0
-!    print*, '-----------------> ',R ! debug
-    do i = 0,6
-       fdamp = fdamp + (b*R)**i / fact(i)
-!       print*, i,asd,fact(i),(b*R)**i / fact(i)  ! debug
-    end do
-    fdamp = 1 - exp( -b * R) * fdamp
-!    print*, 'fdamp ',fdamp ! debug
-    
-  END FUNCTION fdamp
-
   real(kr) FUNCTION hCor(A,b,R)
     IMPLICIT NONE
     real(kr),intent(IN) :: A,b,R
@@ -431,59 +185,29 @@ CONTAINS
 
   END FUNCTION cubsum
 
-  !Mixed Fermi+TangToennies DF
-!!$  real(kr) FUNCTION  GrTTfd(a,b,R,R0)
-!!$    IMPLICIT NONE
-!!$    real(kr),intent(IN) :: a,b,R,R0
-!!$    print*, a
-!!$
-!!$    GrTTfd = 0.5*( 1 + tanh( 23.0d0 * ( R / ( a * R0 ) - 1 ) ) ) * fdamp(b,R)
-!!$
-!!$  END FUNCTION GrTTfd
-
   real(kr) FUNCTION  GrTTfd(R,R0)
     IMPLICIT NONE
-    real(kr) :: a,b,s,R,R0
-!    print*, a
+    real(kr),intent(IN) ::R,R0
+    real(kr) :: a,b0,s,TT,GR
 
     CALL read_parameters(b0,a,s)
+    
+!    b0 = 10
+!    a=1
+!    s=23
 
-    GrTTfd = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) ) &
-         * ( 1.d0 - exp( -b0 * R ) * (1.d0 + b0*R + (b0*R)**2.d0/2.d0 + (b0*R)**3.d0/6.d0 + (b0*R)**4.d0/24.d0 + (b0*R)**5.d0/120.d0 + (b0*R)**6.d0/720.d0))
+    Gr = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
+    TT = 1.d0 - ( exp( -b0 * R ) * (1.d0 + b0*R + (b0*R)**2.d0/2.d0 + (b0*R)**3.d0/6.d0 + (b0*R)**4.d0/24.d0 + (b0*R)**5.d0/120.d0 + (b0*R)**6.d0/720.d0) )
+    GrTTfd = Gr * TT
+!    write(88,*) Gr,TT,GrTTfd
+    write(88,*) b0,a,s
 
   END FUNCTION GrTTfd
 
 
-  real(kr) FUNCTION UDFf(r,r0)
+  SUBROUTINE read_parameters(a,b,c)
     IMPLICIT NONE
-    real(kr),intent(IN) :: r,r0
-    real(kr) :: a, b, n, m, sr
-
-    CALL read_parameters(a,b,m,n,sr)
-
-!           ( 1 + exp(a) * exp( -b * ( r / ( sr * r0 ) )**m) )**un
-    UDFf = ( 1 + exp(a) * exp( -b * ( r / ( sr * r0 ) )**m) )**(-n)
-    
-  END FUNCTION UDFf
-
-  real(kr) FUNCTION D3df(r,r0)
-    IMPLICIT NONE
-    real(kr),intent(IN) :: r,r0
-    real(kr) :: a, b
-
-    CALL read_parameters(a,b)
-!    a=10
-!    b=20
-!           ( 1 + exp(a) * exp( -b * ( r / ( sr * r0 ) )**m) )**un
-    D3df = 1 / ( 1 + 6 * ( r / ( a * 2 * r0 ))**(-b) )
-    
-  END FUNCTION D3df
-
-
-  SUBROUTINE read_parameters(a,b,c,d,e)
-    IMPLICIT NONE
-    real(kr),intent(OUT) :: a,b
-    real(kr),intent(OUT),optional :: c,d,e
+    real(kr),intent(OUT) :: a,b,c
     integer(ki) :: err
     character(kch) :: filename='parameters.dat'
 
@@ -491,11 +215,8 @@ CONTAINS
     call openfile(filename,'read')
     read(fiit(filename),*,iostat=err) a
     read(fiit(filename),*,iostat=err) b
-    if( present(c) ) read(fiit(filename),*,iostat=err) c
-    if( present(d) ) read(fiit(filename),*,iostat=err) d
-    if( present(e) ) read(fiit(filename),*,iostat=err) e
+    read(fiit(filename),*,iostat=err) c
     call closefile(filename)
-!    write(0,*), a,b,n,m,sr,err
     if( err /= 0 ) call die('ERROR: reading parameters.dat')
 
   END SUBROUTINE read_parameters
