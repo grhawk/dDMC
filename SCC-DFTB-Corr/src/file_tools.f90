@@ -77,6 +77,7 @@ CONTAINS
        if( .not. present(readwrite)) stop 'ERROR: You have to specify if the file is writable or not'
        if( readwrite == 'write' ) OPEN(iu,file=file_name,action='READWRITE',form='FORMATTED',status='NEW',IOSTAT=err)
        if( readwrite == 'read' ) OPEN(iu,file=file_name,action='READ',form='FORMATTED',STATUS='OLD',IOSTAT=err)
+       if( readwrite == 'replace' ) OPEN(iu,file=file_name,action='WRITE',form='FORMATTED',STATUS='REPLACE',IOSTAT=err)
     end select
     
 !    print*, iu,file_name,' opened' ! debug

@@ -11,10 +11,9 @@ MODULE ReadInput
   USE string_tools
   IMPLICIT NONE
   character(kch) :: inputtagfile,inputcoofile,atomdatafile,DampFunc,debugflag
-  real(kr)      :: b0,A
 
   PRIVATE
-  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,b0,A,read_stdin,DampFunc,debugflag
+  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,read_stdin,DampFunc,debugflag
 !  PUBLIC :: 
   
 CONTAINS
@@ -48,12 +47,6 @@ CONTAINS
           case ('atomdata')
              atomdatafile = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
-          case ('b0')
-             b0 =  char2real(nojunk(2))
-             ninput = ninput + 1
-          case ('A')
-             A =  char2real(nojunk(2))
-             ninput = ninput + 1
           case ('df')
              DampFunc = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
@@ -67,7 +60,7 @@ CONTAINS
        end if
     end do
     
-    if( ninput /= 7 ) stop 'ERROR: wrong parameters in input'
+    if( ninput /= 5 ) stop 'ERROR: wrong parameters in input'
     
 !    call starting_program_announce
     
@@ -80,8 +73,6 @@ CONTAINS
     write(0,*) 'file tag: #', inputtagfile,"#"
     write(0,*) 'file geometry: ', inputcoofile
     write(0,*) 'atomic data: ', atomdatafile
-    write(0,*) 'b0 value: ', b0
-    write(0,*) 'A  value: ', A
     write(0,*) 'Dumping Function: ',DampFunc
     
   END SUBROUTINE starting_program_announce
