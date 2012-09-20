@@ -33,6 +33,7 @@ PROGRAM SCC_Disp
   character(kch),parameter :: C6file = 'C6file.check'
   character(kch),parameter :: energydbg = 'energyloop.check'
   character(kch),parameter :: distances = 'distances.check'
+  character(kch),parameter :: dampdbg = 'dampingf.check'
 
   call read_stdin
 
@@ -65,11 +66,11 @@ PROGRAM SCC_Disp
   if( debug )then
      call openfile(chrgfile,'replace')
      call openfile(coordfile,'replace')
-     write(fiit(chrgfile),*) '# ATOM_TYPE  MULL_POP   INCHARGE   Z   RvdW  C6free'
+     write(fiit(chrgfile),*) '# ATOM_TYPE  MULL_POP   INCHARGE   Z   RvdW  C6free  POLAR'
      write(fiit(coordfile),*) natom
      write(fiit(coordfile),*)
      do i = 1,natom
-        write(fiit(chrgfile),'(A3,2F15.5,I10,2F20.5)') coords(i)%atom_type, Ni(i),atomdata(findatom(coords(i)%atom_type))%incharge,Zaim(i),rvdw(i),C6free(i)
+        write(fiit(chrgfile),'(A3,2F15.5,I10,3F20.5)') coords(i)%atom_type, Ni(i),atomdata(findatom(coords(i)%atom_type))%incharge,Zaim(i),rvdw(i),C6free(i),polar(i)
         write(fiit(coordfile),'(A3,3F15.5)') coords(i)%atom_type, coords(i)%coord
      end do
      call closefile(fiit(chrgfile))
@@ -96,6 +97,8 @@ PROGRAM SCC_Disp
   ! ==> STARTING ATOMIC LOOP <== !
   if( debug ) call openfile(energydbg,'replace')
   if( debug ) write(fiit(energydbg),*) '# AT_TP(i)    AT_TP(j)    Rab    Rab0    damp   C6(i)   C6(j)  C6ab    E   Etot'
+  if( debug ) call openfile(dampdbg,'replace')
+  if( debug ) write(fiit(dampdbg),*) '# AT_TP(i)    AT_TP(j)    b0in    bmix    basym(i)    basym(j)    N(i)     Z(i)     alpha(i)  N(j)     Z(j)     alpha(j)  '
   if( debug ) call openfile(distances,'replace')
   if( debug ) write(fiit(distances),*) '# AT_TP(i)    AT_TP(j)    xi   yi   zi   xj   yj    zj Rab'
 
@@ -109,7 +112,7 @@ PROGRAM SCC_Disp
         
         Rab0 = cubsum(rvdw(i),rvdw(j))
         !Rab0 = rvdw(i)+rvdw(j)
-        damp =  GrTTfd(Rab,Rab0)
+        damp =  GrTTfd(Rab,Rab0,i,j)
 !        write(77,*) damp
 !        damp = 1.d0
         hhrep = 0.0d0
@@ -133,6 +136,7 @@ PROGRAM SCC_Disp
 
   if( debug ) call closefile(energydbg)
   if( debug ) call closefile(distances)
+  if( debug ) call closefile(dampdbg)
 
   if (  debug )then
      call openfile(c6file,'replace')
@@ -143,8 +147,8 @@ PROGRAM SCC_Disp
   end if
 
   
-!  write(*,'(f20.12)') E*HartKcalMol
-  write(*,'(f20.12)') E
+  write(*,'(f20.12)') E*HartKcalMol
+!  write(*,'(f20.12)') E
 
 CONTAINS
   
@@ -185,16 +189,22 @@ CONTAINS
 
   END FUNCTION cubsum
 
-  real(kr) FUNCTION  GrTTfd(R,R0)
+  real(kr) FUNCTION  GrTTfd(R,R0,i,j)
     IMPLICIT NONE
-    real(kr),intent(IN) ::R,R0
+    integer(ki),intent(IN) :: i,j
+    real(kr),intent(IN) :: R,R0
     real(kr) :: a,b0,s,TT,GR
+    real(kr) :: basymi,basymj,bmixr
 
     CALL read_parameters(b0,a,s)
+
+    basymi = basym(b0,polar(i),Ni(i),Zaim(i))
+    basymj = basym(b0,polar(j),Ni(j),Zaim(j))
+    bmixr = bmix(basymi,basymj)
+ 
+    if (debug) write(fiit(dampdbg),'(2A3,X,7(F9.5))') coords(i)%atom_type, coords(j)%atom_type, b0,bmixr,basymi,basymj,Ni(i),dble(Zaim(i)),polar(i),Ni(j),dble(Zaim(j)),polar(j)
     
-!    b0 = 10
-!    a=1
-!    s=23
+    b0 = bmixr
 
     Gr = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
     TT = 1.d0 - ( exp( -b0 * R ) * (1.d0 + b0*R + (b0*R)**2.d0/2.d0 + (b0*R)**3.d0/6.d0 + (b0*R)**4.d0/24.d0 + (b0*R)**5.d0/120.d0 + (b0*R)**6.d0/720.d0) )
