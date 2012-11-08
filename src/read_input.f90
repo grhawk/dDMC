@@ -1,21 +1,18 @@
-MODULE ReadInput
+MODULE read_input
   ! Variable To read
   !  inputtagfile
   !  inputcoofile
   !  atomdatafile
-  !  b0
-  !  A
-  !  df  (damping function) (TT,TTfix)
+  !  debugflag
 
   USE precision
   USE string_tools
   IMPLICIT NONE
-  character(kch) :: inputtagfile,inputcoofile,atomdatafile,DampFunc,debugflag
-  real(kr)      :: b0,A
+  character(kch) :: inputtagfile,inputcoofile,atomdatafile,debugflag
 
   PRIVATE
-  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,b0,A,read_stdin,DampFunc,debugflag
-!  PUBLIC :: 
+  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag
+  PUBLIC :: read_stdin
   
 CONTAINS
   
@@ -48,15 +45,6 @@ CONTAINS
           case ('atomdata')
              atomdatafile = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
-          case ('b0')
-             b0 =  char2real(nojunk(2))
-             ninput = ninput + 1
-          case ('A')
-             A =  char2real(nojunk(2))
-             ninput = ninput + 1
-          case ('df')
-             DampFunc = trim(adjustl(nojunk(2)))
-             ninput = ninput + 1
           case ('debugflag')
              debugflag = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
@@ -67,7 +55,7 @@ CONTAINS
        end if
     end do
     
-    if( ninput /= 7 ) stop 'ERROR: wrong parameters in input'
+    if( ninput /= 4 ) stop 'ERROR: wrong parameters in input'
     
 !    call starting_program_announce
     
@@ -80,13 +68,10 @@ CONTAINS
     write(0,*) 'file tag: #', inputtagfile,"#"
     write(0,*) 'file geometry: ', inputcoofile
     write(0,*) 'atomic data: ', atomdatafile
-    write(0,*) 'b0 value: ', b0
-    write(0,*) 'A  value: ', A
-    write(0,*) 'Dumping Function: ',DampFunc
     
   END SUBROUTINE starting_program_announce
 
-END MODULE ReadInput
+END MODULE read_input
 
 
 ! # -> Comment

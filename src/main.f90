@@ -6,7 +6,7 @@ PROGRAM SCC_Disp
   USE read_xyz
   USE read_atomdata
   USE file_tools
-  USE ReadInput  ! TODO better
+  USE read_input  ! TODO better
   USE parameters, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
 
@@ -109,7 +109,7 @@ PROGRAM SCC_Disp
         
         Rab0 = cubsum(rvdw(i),rvdw(j))
         !Rab0 = rvdw(i)+rvdw(j)
-        damp =  GrTTfd(Rab,Rab0)
+        damp =  FdTTdf(Rab,Rab0)
 !        write(77,*) damp
 !        damp = 1.d0
         hhrep = 0.0d0
@@ -184,23 +184,23 @@ CONTAINS
 
   END FUNCTION cubsum
 
-  real(kr) FUNCTION  GrTTfd(R,R0)
+  real(kr) FUNCTION  FdTTdf(R,R0)
     IMPLICIT NONE
-    real(kr) :: a,b,s,R,R0,TT,GR
+    real(kr) :: a,b,s,R,R0,TT,Fd
 
-    CALL read_parameters(b0,a,s)
+    CALL read_parameters(b,a,s)
     
 !    b0 = 10
 !    a=1
 !    s=23
 
-    Gr = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
-    TT = 1.d0 - ( exp( -b0 * R ) * (1.d0 + b0*R + (b0*R)**2.d0/2.d0 + (b0*R)**3.d0/6.d0 + (b0*R)**4.d0/24.d0 + (b0*R)**5.d0/120.d0 + (b0*R)**6.d0/720.d0) )
-    GrTTfd = Gr * TT
+    Fd = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
+    TT = 1.d0 - ( exp( -b * R ) * (1.d0 + b*R + (b*R)**2.d0/2.d0 + (b*R)**3.d0/6.d0 + (b*R)**4.d0/24.d0 + (b*R)**5.d0/120.d0 + (b*R)**6.d0/720.d0) )
+    FdTTdf = Fd * TT
 !    write(88,*) Gr,TT,GrTTfd
-    write(88,*) b0,a,s
+    write(88,*) b,a,s
 
-  END FUNCTION GrTTfd
+  END FUNCTION FdTTdf
 
 
   SUBROUTINE read_parameters(a,b,c)
