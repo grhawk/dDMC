@@ -1,4 +1,11 @@
 PROGRAM SCC_Disp
+
+  ! Damping function:
+  ! from: JCTC: Stephan Steinmann 2009
+  ! (no "b" factor")
+  ! 
+  ! No Hbond correction
+  !
   
   USE precision
   USE utils
