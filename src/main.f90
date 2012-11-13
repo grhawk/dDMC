@@ -37,7 +37,7 @@ PROGRAM SCC_Disp
   character(kch),parameter :: chrgfile = 'chargefile.check'
   character(kch),parameter :: coordfile = 'coordinate.check'
   character(kch),parameter :: C6aimfile = 'C6aim.check'
-  character(kch),parameter :: C6file = 'C6file.check'
+  character(kch),parameter :: C6last = 'C6last.check'
   character(kch),parameter :: energydbg = 'energyloop.check'
   character(kch),parameter :: distances = 'distances.check'
 
@@ -142,11 +142,12 @@ PROGRAM SCC_Disp
   if( debug ) call closefile(distances)
 
   if (  debug )then
-     call openfile(c6file,'replace')
+     call openfile(c6last,'replace')
+     write(fiit(c6last),*) '#ATOM_TYPE     C6free    C6aim'
      do i = 1,natom
-        write(fiit(c6file),'(A3,2F10.4)') coords(i)%atom_type, C6free(i), C6aim(i)
+        write(fiit(c6last),'(A3,2F10.4)') coords(i)%atom_type, C6free(i), C6aim(i)
      end do
-     call closefile(fiit(c6file))
+     call closefile(fiit(c6last))
   end if
 
   
