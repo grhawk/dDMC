@@ -27,7 +27,7 @@ PROGRAM SCC_Disp
 
   integer(ki),dimension(:),allocatable:: Zaim
   real(kr),dimension(:),allocatable :: C6aim,C6free
-  real(kr),dimension(:),allocatable :: polar,rvdw
+  real(kr),dimension(:),allocatable :: polar,rvdw,basym_ii
 
   integer(ki) :: i,j
 
@@ -60,13 +60,14 @@ PROGRAM SCC_Disp
   
 
   ! => Initialize arrays
-  allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom))
+  allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom))
   do i = 1,natom                                                  ! Some useful arrays:
      Zaim(i) = atomdata(findatom(coords(i)%atom_type))%Z          ! - Z_i of atoms in xyz file
      C6free(i) = atomdata(findatom(coords(i)%atom_type))%D3C6   ! - C6free by 3D for "   "
      polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3 ! -polar for    "   "
      rvdw(i) = atomdata(findatom(coords(i)%atom_type))%vdWr / BohrAngst ! - Bondi radii
-     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge
+     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
+     basym_ii(i) = basym(polar(i),Ni(i),Zaim(i))   ! - bii of the damping function for atom i (it has to be multiplied by b0).
   end do
  
   if( debug )then
@@ -114,9 +115,9 @@ PROGRAM SCC_Disp
         
         Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
         
-        Rab0 = cubsum(rvdw(i),rvdw(j))
-        !Rab0 = rvdw(i)+rvdw(j)
-        damp =  FdTTdf(Rab,Rab0)
+!        Rab0 = cubsum(rvdw(i),rvdw(j))
+        Rab0 = rvdw(i)+rvdw(j)
+        damp =  FdTTdf(basym_ii(i),basym_ii(j),Rab,Rab0)
 !        write(77,*) damp
 !        damp = 1.d0
         hhrep = 0.0d0
@@ -163,12 +164,12 @@ CONTAINS
     
   END FUNCTION bmix
 
-  real(kr) FUNCTION basym(b0,alpha,N,Z)
+  real(kr) FUNCTION basym(alpha,N,Z)
     IMPLICIT NONE
-    real(kr),intent(IN) :: b0,alpha,N
+    real(kr),intent(IN) :: alpha,N
     integer(ki),intent(IN) :: Z
     
-    basym = b0 * ( 1 / alpha )**(1./3.) * ( real(Z) / N )**(1./3.)
+    basym = ( 1 / alpha )**(1./3.) * ( real(Z) / N )**(1./3.)
     
 
 !    print*, 'basym', b0,alpha,Z,N  ! debug
@@ -192,21 +193,24 @@ CONTAINS
 
   END FUNCTION cubsum
 
-  real(kr) FUNCTION  FdTTdf(R,R0)
+  real(kr) FUNCTION  FdTTdf(basymi,basymj,R,R0)
     IMPLICIT NONE
-    real(kr) :: a,b,s,R,R0,TT,Fd
+    real(kr),intent(IN) :: basymi,basymj,R,R0
+    real(kr) :: a,b0,s,TT,Fd,bij
 
-    CALL read_parameters(b,a,s)
+    CALL read_parameters(b0,a,s)
     
 !    b0 = 10
 !    a=1
 !    s=23
 
+    bij=bmix(basymi,basymj)
+    
     Fd = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
-    TT = 1.d0 - ( exp( -b * R ) * (1.d0 + b*R + (b*R)**2.d0/2.d0 + (b*R)**3.d0/6.d0 + (b*R)**4.d0/24.d0 + (b*R)**5.d0/120.d0 + (b*R)**6.d0/720.d0) )
+    TT = 1.d0 - ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
     FdTTdf = Fd * TT
 !    write(88,*) Gr,TT,GrTTfd
-    write(88,*) b,a,s
+!    write(88,*) b,a,s
 
   END FUNCTION FdTTdf
 
