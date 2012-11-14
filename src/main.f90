@@ -40,6 +40,7 @@ PROGRAM SCC_Disp
   character(kch),parameter :: C6last = 'C6last.check'
   character(kch),parameter :: energydbg = 'energyloop.check'
   character(kch),parameter :: distances = 'distances.check'
+  character(kch),parameter :: dampingfunc = 'damping.check'
 
   call read_stdin
 
@@ -204,13 +205,26 @@ CONTAINS
 !    a=1
 !    s=23
 
-    bij=bmix(basymi,basymj)
+    bij = bmix(b0*basymi,b0*basymj)
     
-    Fd = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
-    TT = 1.d0 - ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
+!    Fd = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
+    Fd = 1.0d0
+!    TT = 1.d0 - ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
+!    TT = 1.0d0
     FdTTdf = Fd * TT
 !    write(88,*) Gr,TT,GrTTfd
+!    write(88,*) 'Only TT'
+!    write(88,*) 'Only Fd'
 !    write(88,*) b,a,s
+
+  if (  debug )then
+     call openfile(dampingfunc,'replace')
+     write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j    b0   a   s   Fd    TT    FdTTdf'
+     do i = 1,natom
+        write(fiit(dampingfunc),'(2A3,6F8.3)') coords(i)%atom_type, coords(i)%atom_type, b0, a, s, Fd, TT, FdTTdf
+     end do
+!     call closefile(fiit(dampingfunc))
+  end if
 
   END FUNCTION FdTTdf
 
