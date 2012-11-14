@@ -107,6 +107,9 @@ PROGRAM SCC_Disp
   if( debug ) write(fiit(energydbg),*) '# AT_TP(i)    AT_TP(j)    Rab    Rab0    damp   C6(i)   C6(j)  C6ab    E   Etot'
   if( debug ) call openfile(distances,'replace')
   if( debug ) write(fiit(distances),*) '# AT_TP(i)    AT_TP(j)    xi   yi   zi   xj   yj    zj Rab'
+  if( debug ) call openfile(dampingfunc,'replace')
+  if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j    R0   R   b0   a   s   Fd    TT    FdTTdf'
+
 
   E = 0.0
   atom1: do i = 1,natom/2
@@ -142,6 +145,7 @@ PROGRAM SCC_Disp
 
   if( debug ) call closefile(energydbg)
   if( debug ) call closefile(distances)
+  if( debug ) call closefile(dampingfunc)
 
   if (  debug )then
      call openfile(c6last,'replace')
@@ -217,14 +221,8 @@ CONTAINS
 !    write(88,*) 'Only Fd'
 !    write(88,*) b,a,s
 
-  if (  debug )then
-     call openfile(dampingfunc,'replace')
-     write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j    b0   a   s   Fd    TT    FdTTdf'
-     do i = 1,natom
-        write(fiit(dampingfunc),'(2A3,6F8.3)') coords(i)%atom_type, coords(i)%atom_type, b0, a, s, Fd, TT, FdTTdf
-     end do
-!     call closefile(fiit(dampingfunc))
-  end if
+
+    if (  debug ) write(fiit(dampingfunc),'(2A3,8F8.3)') coords(i)%atom_type, coords(j)%atom_type, R0, R, b0, a, s, Fd, TT, FdTTdf
 
   END FUNCTION FdTTdf
 
