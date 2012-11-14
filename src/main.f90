@@ -112,9 +112,9 @@ PROGRAM SCC_Disp
 
 
   E = 0.0
-  atom1: do i = 1,natom/2
+  atom1: do i = 1,natom
      Hi = IsHAtom(i) ! To use hhrep
-     atom2: do j = natom/2+1,natom
+     atom2: do j = i+1,natom
         Hj = IsHAtom(j) ! To use hhrep
         
         Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
