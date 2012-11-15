@@ -18,7 +18,7 @@ PROGRAM SCC_Disp
   IMPLICIT NONE
 
   integer(ki) :: natom
-  real(kr) :: E,C6ab,Rab0,Rab,ba,bb,bab,damp,hhrep
+  real(kr) :: E,C6ab,Rab0,Rab,damp,hhrep
 
   type(xyz_coords),pointer :: mol1(:),mol2(:)
 
@@ -78,7 +78,9 @@ PROGRAM SCC_Disp
      write(fiit(coordfile),*) natom
      write(fiit(coordfile),*)
      do i = 1,natom
-        write(fiit(chrgfile),'(A3,2F15.5,I10,2F20.5)') coords(i)%atom_type, Ni(i),atomdata(findatom(coords(i)%atom_type))%incharge,Zaim(i),rvdw(i),C6free(i)
+        write(fiit(chrgfile),'(A3,2F15.5,I10,2F20.5)') coords(i)&
+             &%atom_type, Ni(i),atomdata(findatom(coords(i)&
+             &%atom_type))%incharge,Zaim(i),rvdw(i),C6free(i) 
         write(fiit(coordfile),'(A3,3F15.5)') coords(i)%atom_type, coords(i)%coord
      end do
      call closefile(fiit(chrgfile))
@@ -95,7 +97,9 @@ PROGRAM SCC_Disp
      call openfile(C6aimfile,'replace')
      write(fiit(C6aimfile),*) '# ATOM_TYPE   MULL_POP   Z   N/Z  (N/Z)**2  C6aim   C6free'
      do i = 1,natom
-        write(fiit(C6aimfile),'(A3,F12.4,I6,4F12.4)') coords(i)%atom_type,Ni(i),Zaim(i),(Ni(i) / dble(Zaim(i))),(Ni(i) / dble(Zaim(i)))**2,C6aim(i),C6free(i)
+        write(fiit(C6aimfile),'(A3,F12.4,I6,4F12.4)') &
+             & coords(i)%atom_type,Ni(i),Zaim(i), (Ni(i) / dble(Zaim(i))),&
+             & (Ni(i) / dble(Zaim(i)))**2,C6aim(i),C6free(i)
 !        write(fiit(C6aimfile),*) coords(i)%atom_type,Ni(i),Zaim(i),(Ni(:) / dble(Zaim(:))),(Ni(:) / dble(Zaim(:)))**2,C6aim(i),C6free(i)
      end do
      call closefile(fiit(C6aimfile))
@@ -111,7 +115,7 @@ PROGRAM SCC_Disp
   if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j    R0   R   b0   a   s   Fd    TT    FdTTdf'
 
 
-  E = 0.0
+  E = 0.0d0
   atom1: do i = 1,natom
      Hi = IsHAtom(i) ! To use hhrep
      atom2: do j = i+1,natom
@@ -133,8 +137,12 @@ PROGRAM SCC_Disp
         
         E =  E - damp * C6ab / Rab**6   ! Dispersion Energy
            
-        if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, damp, C6aim(i), C6aim(j), C6ab, damp * C6ab / Rab**6, E
-        if( debug ) write(fiit(distances),'(2A3,2X,7(X,F15.5))') coords(i)%atom_type, coords(j)%atom_type, coords(i)%coord, coords(j)%coord, Rab
+        if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') &
+             & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
+             & damp, C6aim(i), C6aim(j), C6ab, damp * C6ab / Rab**6, E
+        if( debug ) write(fiit(distances),'(2A3,2X,7(X,F15.5))') &
+             & coords(i)%atom_type, coords(j)%atom_type, &
+             & coords(i)%coord, coords(j)%coord, Rab
         
         if( Hi .and. Hj ) then
            E = E + hhrep  ! HH-repulsion correction
@@ -213,7 +221,9 @@ CONTAINS
     
     Fd = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
 !    Fd = 1.0d0
-    TT = 1.d0 - ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
+    TT = 1.d0 - &
+         & ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + &
+         & (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
 !    TT = 1.0d0
     FdTTdf = Fd * TT
 !    write(88,*) Gr,TT,GrTTfd
