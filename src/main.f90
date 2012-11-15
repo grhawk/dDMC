@@ -41,6 +41,8 @@ PROGRAM SCC_Disp
   character(kch),parameter :: energydbg = 'energyloop.check'
   character(kch),parameter :: distances = 'distances.check'
   character(kch),parameter :: dampingfunc = 'damping.check'
+  character(kch),parameter :: bvalues = 'basym.check'
+  character(kch),parameter :: excelfile = 'excelfile.check'
 
   call read_stdin
 
@@ -61,6 +63,9 @@ PROGRAM SCC_Disp
   
 
   ! => Initialize arrays
+  if( debug ) call openfile(bvalues,'replace')
+  if( debug ) write(fiit(bvalues),*) '#ATOM_TYPE_i ATOM_TYPE_j   alpha  N  Z' 
+
   allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom))
   do i = 1,natom                                                  ! Some useful arrays:
      Zaim(i) = atomdata(findatom(coords(i)%atom_type))%Z          ! - Z_i of atoms in xyz file
@@ -70,6 +75,9 @@ PROGRAM SCC_Disp
      Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
      basym_ii(i) = basym(polar(i),Ni(i),Zaim(i))   ! - bii of the damping function for atom i (it has to be multiplied by b0).
   end do
+
+  if( debug ) call closefile(bvalues)
+
  
   if( debug )then
      call openfile(chrgfile,'replace')
@@ -112,7 +120,12 @@ PROGRAM SCC_Disp
   if( debug ) call openfile(distances,'replace')
   if( debug ) write(fiit(distances),*) '# AT_TP(i)    AT_TP(j)    xi   yi   zi   xj   yj    zj Rab'
   if( debug ) call openfile(dampingfunc,'replace')
-  if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j    R0   R   b0   a   s   Fd    TT    FdTTdf'
+  if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j   R0  R  b0  a  s  basymi  basymj   bij  Fd   TT   FdTTdfR0 '
+  if( debug ) call openfile(excelfile,'replace')
+  if( debug ) write(fiit(excelfile),*) '#AT_TP(i)  AT_TP(j) Rab  Rvdw(&
+       &i) Rvdw(j)  Rab0  alpha(i)  alpha(j)  C6free(i)  C6free(j)  Za&
+       &im(i)  Zaim(j)  Ni(i)  Ni(j)  C6aim(i)  C6aim(j)  C6ab  basym(&
+       &i)  basym(j)  damp  E  Etot' 
 
 
   E = 0.0d0
@@ -140,6 +153,12 @@ PROGRAM SCC_Disp
         if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
              & damp, C6aim(i), C6aim(j), C6ab, damp * C6ab / Rab**6, E
+        if( debug ) write(fiit(excelfile),'(2A3,2X,20(X,F15.5))')&
+             & coords(i)%atom_type, coords(j)%atom_type, Rab, rvdw(i)&
+             &, rvdw(j), Rab0, polar(i), polar(j), C6free(i),&
+             & C6free(j), real(Zaim(i)),real(Zaim(j)), Ni(i), Ni(j),&
+             & C6aim(i), C6aim(j), C6ab, basym_ii(i), basym_ii(j),&
+             & damp, damp * C6ab / Rab**6, E 
         if( debug ) write(fiit(distances),'(2A3,2X,7(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, &
              & coords(i)%coord, coords(j)%coord, Rab
@@ -154,6 +173,7 @@ PROGRAM SCC_Disp
   if( debug ) call closefile(energydbg)
   if( debug ) call closefile(distances)
   if( debug ) call closefile(dampingfunc)
+  if( debug ) call closefile(excelfile)
 
   if (  debug )then
      call openfile(c6last,'replace')
@@ -183,6 +203,7 @@ CONTAINS
     integer(ki),intent(IN) :: Z
     
     basym = ( 1 / alpha )**(1./3.) * ( real(Z) / N )**(1./3.)
+    if (debug) write(fiit(bvalues),'(1A3,3F8.3,I5)') coords(i)%atom_type, basym, alpha, N, Z
     
 
 !    print*, 'basym', b0,alpha,Z,N  ! debug
@@ -232,7 +253,9 @@ CONTAINS
 !    write(88,*) b,a,s
 
 
-    if (  debug ) write(fiit(dampingfunc),'(2A3,8F8.3)') coords(i)%atom_type, coords(j)%atom_type, R0, R, b0, a, s, Fd, TT, FdTTdf
+  if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
+       &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
+       &,Fd,TT,FdTTdf 
 
   END FUNCTION FdTTdf
 
