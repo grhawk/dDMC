@@ -102,7 +102,7 @@ CONTAINS
        
        ! Provide from CRC 10-186
        ! Units = 10^{-24} cm^{3}
-       ! Checked on 15.11.2012
+       ! Checked on 15.11.2012 until Zn.
        atomdata%polarizability = (/ 0.666793d+0, 0.2050522d+0, 24.33d+0&
             &, 5.60d+0, 3.03d+0, 1.67d+0, 1.10d+0, 0.802d+0, 0.557d+0&
             &, 0.3956d+0, 24.11d+0, 10.6d+0, 6.8d+0, 5.38d+0, 3.63d+0&
