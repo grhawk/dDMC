@@ -82,10 +82,10 @@ CONTAINS
     integer(ki) :: l
     
 
-    HAtom=(/ 'H','h' /)
+    HAtom=(/ ' H',' h' /)
 
     do l = 1,2
-       if( coords(index)%atom_type == HAtom(l) ) IsHAtom = .true.
+       if( trim(adjustl(coords(index)%atom_type)) == trim(adjustl(HAtom(l))) ) IsHAtom = .true.
     end do
     
     
