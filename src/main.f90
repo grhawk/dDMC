@@ -2,7 +2,7 @@ PROGRAM SCC_Disp
 
   ! Damping function:
   ! from: JCTC: Stephan Steinmann 2009
-  ! (no "b" factor")
+  ! (with "b" factor depending on atom couple)
   ! 
   ! No Hbond correction
   !
