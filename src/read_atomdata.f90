@@ -1,7 +1,7 @@
 MODULE read_atomdata
   USE precision
   USE file_tools
-  
+
   IMPLICIT NONE
   
   type,public :: atomdata_type
@@ -93,12 +93,12 @@ CONTAINS
           if( i > 26 .and. i <= 54 )  atomdata(i)%incharge = 36
        end do
 
-       atomdata%atom_type = (/ "H", "He", "Li", "Be", "B", "C", "N", "&
-            &O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "A&
-            &r", "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "&
-            &Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr",&
-            & "Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd&
-            &", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe" /)
+       atomdata%atom_type = (/ ' H', 'He', 'Li', 'Be', ' B', ' C', ' N', '&
+            & O', ' F', 'Ne', 'Na', 'Mg', 'Al', 'Si', ' P', ' S', 'Cl', 'A&
+            &r', ' K', 'Ca', 'Sc', 'Ti', ' V', 'Cr', 'Mn', 'Fe', 'Co', '&
+            &Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr',&
+            & 'Rb', 'Sr', ' Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd&
+            &', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', ' I', 'Xe' /)
        
        ! Provide from CRC 10-186
        ! Units = 10^{-24} cm^{3}
@@ -148,12 +148,12 @@ CONTAINS
 !!$            &10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000 /)
 
        ! Modified
-       atomdata%vdWr = (/ 1.10d0, 1.40d0, 10000, 10000, 10000, 1.70d0, 1.55d0, &
-            & 1.52d0, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 1.80d0, 10000,&
-            &10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, &
-            &10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000,&
-            & 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000,&
-            &10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000 /)
+       atomdata%vdWr = (/ 1.10d0, 1.40d0, 10000d0, 10000d0, 10000d0, 1.70d0, 1.55d0, &
+            & 1.52d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 1.80d0, 1.80d0, 1.8d0,&
+            &10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, &
+            &10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0,&
+            & 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0,&
+            &10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0, 10000d0 /)
 
 
     end if
@@ -167,7 +167,8 @@ CONTAINS
     integer(ki) :: i
 
     do i = 1,size(atomdata)
-       if( atomdata(i)%atom_type == atom ) then
+!       print*, '#',trim(atom),'#',trim(adjustl(atomdata(i)%atom_type)),'#'
+       if( trim(adjustl(atomdata(i)%atom_type)) == trim(adjustl(atom)) ) then
           atom_by_name = i
           return
        end if
