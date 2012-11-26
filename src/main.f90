@@ -244,8 +244,11 @@ CONTAINS
     TT = 1.d0 - &
          & ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + &
          & (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
-    FdTTdf = Fd * TT
 
+    FdTTdf = Fd * TT
+!    FdTTdf = TT
+!    FdTTdf = Fd
+!    FdTTdf = 1.0d0
 
   if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
        &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
