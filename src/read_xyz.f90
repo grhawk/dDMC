@@ -30,10 +30,12 @@ USE file_tools
 IMPLICIT NONE
 
 TYPE,public :: xyz_coords
-   integer(ki)  :: index
-   character(5) :: atom_type
+   integer(ki)   :: index
+   character(5)  :: atom_type
    real(kr),dimension(3) :: coord
 END type xyz_coords
+
+character(64) :: commentline
 
 type(xyz_coords),target,allocatable :: coords(:)
 
@@ -54,10 +56,11 @@ CONTAINS
     call openfile(file,'read')
     
     read(fiit(file),*) natom
-    read(fiit(file),*) junk
-    if( junk(1:1) == 'H' .or. junk(1:1) == 'C' .or.  &
-         junk(1:1) == 'O' .or. junk(1:1) == 'N' .or. &
-         junk(1:1) == 'S' .or. junk(1:1) == 'P' ) backspace(fiit(file))
+    read(fiit(file),'(A64)') commentline  ! The format prevent reading the new line
+!    read(fiit(file),*) junk
+!    if( junk(1:1) == 'H' .or. junk(1:1) == 'C' .or.  &
+!         junk(1:1) == 'O' .or. junk(1:1) == 'N' .or. &
+!         junk(1:1) == 'S' .or. junk(1:1) == 'P' ) backspace(fiit(file))
 
     allocate(coords(natom)) ! Needs more options
     
