@@ -230,7 +230,7 @@ CONTAINS
   real(kr) FUNCTION  FdTTdf(basymi,basymj,R,R0)
     IMPLICIT NONE
     real(kr),intent(IN) :: basymi,basymj,R,R0
-    real(kr) :: a,b0,s,TT,Fd,bij
+    real(kr) :: a,b0,s,TT,Fd,bij,x,bx
 
     CALL read_parameters(b0,a,s)
     
@@ -239,14 +239,22 @@ CONTAINS
 !    s=23
 
     bij = bmix(b0*basymi,b0*basymj)
+    x = bij*R
     
-    Fd = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
-    TT = 1.d0 - &
-         & ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + &
-         & (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
+    Fd = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
+!    TT = 1.d0 - &
+!         & ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + &
+!         & (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
 
-    FdTTdf = Fd * TT
-!    FdTTdf = TT
+    bx = Fd * bij * R
+
+    TT = 1.d0 - &
+         & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
+         & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
+
+
+!    FdTTdf = Fd * TT
+    FdTTdf = TT
 !    FdTTdf = Fd
 !    FdTTdf = 1.0d0
 
