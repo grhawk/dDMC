@@ -1,8 +1,5 @@
 MODULE read_xyz
 
-!TODO:
-! - Generalize the comment reading method
-
 ! Calling get_data(file,dummy) from main (where file !
 ! is the name of the xyz file) you obtain the number !
 ! of atom in the file as "dummy" and will be         !
