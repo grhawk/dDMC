@@ -253,7 +253,7 @@ CONTAINS
          & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
 
     
-    Fd2 = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
+    Fd2 = 0.5*( 1.d0 + tanh( s * ( R / ( a * R0 ) - 1.d0 ) ) )
 
 !    FdTTdf = Fd * TT
     FdTTdf = Fd2*TT
