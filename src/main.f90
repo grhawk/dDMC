@@ -230,7 +230,7 @@ CONTAINS
   real(kr) FUNCTION  FdTTdf(basymi,basymj,R,R0)
     IMPLICIT NONE
     real(kr),intent(IN) :: basymi,basymj,R,R0
-    real(kr) :: a,b0,s,TT,Fd,bij,x,bx
+    real(kr) :: a,b0,s,TT,Fd,bij,x,bx,Fd2
 
     CALL read_parameters(b0,a,s)
     
@@ -252,9 +252,11 @@ CONTAINS
          & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
          & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
 
+    
+    Fd2 = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
 
 !    FdTTdf = Fd * TT
-    FdTTdf = Fd*TT
+    FdTTdf = Fd2*TT
 !    FdTTdf = Fd
 !    FdTTdf = 1.0d0
 
