@@ -78,7 +78,7 @@ CONTAINS
   logical FUNCTION IsHAtom(index)
     IMPLICIT NONE
     integer(ki),intent(IN) :: index
-    character(1) :: HAtom(2)
+    character(2) :: HAtom(2)
     integer(ki) :: l
     
 
@@ -87,8 +87,10 @@ CONTAINS
     do l = 1,2
        if( trim(adjustl(coords(index)%atom_type)) == trim(adjustl(HAtom(l))) ) IsHAtom = .true.
     end do
-    
-    
+
+!    print*, '#',trim(adjustl(coords(index)%atom_type)),'#'
+!    print*, '#',trim(adjustl(HAtom(1))),'#'
+
   END FUNCTION IsHAtom
   
 
