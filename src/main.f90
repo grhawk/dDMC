@@ -239,7 +239,7 @@ CONTAINS
 !    s=23
 
     bij = bmix(b0*basymi,b0*basymj)
-    x = R
+    x = bij*R
     
     Fd = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
 !    TT = 1.d0 - &
@@ -254,7 +254,7 @@ CONTAINS
 
 
 !    FdTTdf = Fd * TT
-    FdTTdf = TT
+    FdTTdf = Fd*TT
 !    FdTTdf = Fd
 !    FdTTdf = 1.0d0
 
