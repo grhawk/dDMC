@@ -141,7 +141,6 @@ PROGRAM SCC_Disp
         damp =  FdTTdf(basym_ii(i),basym_ii(j),Rab,Rab0)
 !        write(77,*) damp
 !        damp = 1.d0
-        hhrep = 0.0d0
 
         
         ! => Mixing C6aim (REL. A)
@@ -164,6 +163,8 @@ PROGRAM SCC_Disp
              & coords(i)%coord, coords(j)%coord, Rab
         
         if( Hi .and. Hj ) then
+!           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
+           hhrep = hcor(Rab)
            E = E + hhrep  ! HH-repulsion correction
         end if
 
@@ -210,11 +211,18 @@ CONTAINS
     
   END FUNCTION basym
   
-  real(kr) FUNCTION hCor(A,b,R)
+  real(kr) FUNCTION hCor(R)
     IMPLICIT NONE
-    real(kr),intent(IN) :: A,b,R
+    real(kr),intent(IN) :: R
+    real(kr) :: A,b!,dummy
+
+!    CALL read_parameters(A,b,dummy)
+
+    A = 1.49689540654504
+    b = 1.67162251877518
     
     hCor = A * exp( -b * R )
+    
 !    print*, "Inside Function: ",hcor, A, b ,R ! debug
     
   END FUNCTION hCor
@@ -230,9 +238,13 @@ CONTAINS
   real(kr) FUNCTION  FdTTdf(basymi,basymj,R,R0)
     IMPLICIT NONE
     real(kr),intent(IN) :: basymi,basymj,R,R0
-    real(kr) :: a,b0,s,TT,Fd,bij,x,bx,Fd2
+    real(kr) :: a,b0,s,TT,Fd,bij,x,bx
 
-    CALL read_parameters(b0,a,s)
+!    CALL read_parameters(b0,a,s)
+
+    b0 = 2.18206081886510
+    a =  1.12451132211179
+    s =  34.9266956797606
     
 !    b0 = 10
 !    a=1
@@ -246,16 +258,15 @@ CONTAINS
 !         & ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + &
 !         & (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
 
-    bx = bij * R
+    bx = Fd * bij * R
 
     TT = 1.d0 - &
          & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
          & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
 
-    
 
 !    FdTTdf = Fd * TT
-    FdTTdf = Fd*TT
+    FdTTdf = TT
 !    FdTTdf = Fd
 !    FdTTdf = 1.0d0
 
