@@ -35,7 +35,7 @@ CONTAINS
        if( junk(1:1) /= '#' .and. junk(1:1) /= '' ) then
           
           call shrink_string(junk,'=',nojunk,nstring)
-          write(0,*) 'asd',junk,nojunk,nstring ! debug
+!          write(0,*) 'asd',junk,nojunk,nstring ! debug
           if( nstring /= 2 ) stop 'ERROR: checkpoint 1 in read_input'
           
           select case (trim(adjustl(nojunk(1))))

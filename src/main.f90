@@ -47,6 +47,9 @@ PROGRAM SCC_Disp
   character(kch),parameter :: bvalues = 'basym.check'
   character(kch),parameter :: excelfile = 'excelfile.check'
 
+  character(kch),parameter :: tagfile = 'dDMC.tag'
+
+
   call read_stdin
   if( dfprint ) CALL printDf()
 
@@ -125,10 +128,8 @@ PROGRAM SCC_Disp
 
   E = 0.0d0
   atom1: do i = 1,natom
-     print*, 'atom 1'
      Hi = IsHAtom(i) ! To use hhrep
      atom2: do j = i+1,natom
-        print*, 'atom 2'
         Hj = IsHAtom(j) ! To use hhrep
         
         Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
@@ -160,7 +161,7 @@ PROGRAM SCC_Disp
              & coords(i)%coord, coords(j)%coord, Rab
         
         if( Hi .and. Hj ) then
-           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
+!           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
            hhrep = hcor(Rab)
 !           hhrep = 0d0
            E = E + hhrep  ! HH-repulsion correction
@@ -185,6 +186,11 @@ PROGRAM SCC_Disp
 
   
   write(*,'(f20.12)') E*HartKcalMol
+  CALL openfile(tagfile,'replace')
+  write(fiit(tagfile),*) 'correction_energy     1'
+  write(fiit(tagfile),'(E30.20)') E*HartKcalMol
+  CALL closefile(tagfile)
+  
 
 CONTAINS
   
