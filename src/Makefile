@@ -1,6 +1,6 @@
 PROG = dDMC2
-FC = ifort
-#FC = gfortran
+#FC = ifort
+FC = gfortran
 #FC = gfortran -ffixed-line-length-0 -std=legacy 
 LIBS = 
 FFLAGS = -O -g

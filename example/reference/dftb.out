@@ -1,0 +1,80 @@
+================================================================================
+==
+==   Density Functional based Tight Binding with a lot of extensions (DFTB+)    
+==
+==                              Release: 1.2 (p1)
+==
+==                            (ParserVersion = 4)
+==
+================================================================================
+
+
+********************************************************************************
+** Parsing and initializing
+********************************************************************************
+
+Interpreting input file 'dftb_in.hsd'
+--------------------------------------------------------------------------------
+Reading SK-files:
+  /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/O-O.skf
+  /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/O-C.skf
+  /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/O-H.skf
+  /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/C-O.skf
+  /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/C-C.skf
+  /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/C-H.skf
+  /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/H-O.skf
+  /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/H-C.skf
+  /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/H-H.skf
+Done.
+
+
+Processed input in HSD format written to 'dftb_pin.hsd'
+
+Starting initialization...
+--------------------------------------------------------------------------------
+Mode:                        Conjugate gradient relaxation
+Self consistent charges:     Yes
+SCC-tolerance:                 0.100000E-04
+Max. scc iterations:                    100
+Ewald alpha parameter:         0.000000E+00
+Spin polarisation:           No
+Nr. of up electrons:            26.000000
+Nr. of down electrons:          26.000000
+Periodic boundaries:         No
+Diagonalizer:                Divide and Conquer
+Mixer:                       Broyden mixer
+Mixing parameter:                  0.200000
+Maximal SCC-cycles:                     100
+Nr. of chrg. vec. in memory:            100
+Nr. of moved atoms:                      18
+Max. nr. of geometry steps:               0
+Force tolerance:               0.100000E-03
+Electronic temperature:        0.100000E-07
+Initial charges:             Set automatically (system chrg:   0.000E+00)
+Included shells:              O:  s, p
+                              C:  s, p
+                              H:  s
+Extra options:
+--------------------------------------------------------------------------------
+ 
+
+********************************************************************************
+** Geometry step: 0
+********************************************************************************
+
+  iSCC Total electronic   Diff electronic      SCC error    
+    1   -0.23465110E+02    0.00000000E+00    0.25894204E+00
+    2   -0.23470880E+02   -0.57708927E-02    0.17630062E+00
+    3   -0.23475854E+02   -0.49736012E-02    0.13682844E-01
+    4   -0.23475874E+02   -0.20196120E-04    0.26118677E-02
+    5   -0.23475875E+02   -0.74186191E-06    0.12911957E-02
+    6   -0.23475875E+02   -0.48131437E-06    0.43381783E-03
+    7   -0.23475875E+02   -0.17478857E-07    0.98364261E-04
+    8   -0.23475875E+02   -0.39666510E-08    0.22182021E-04
+    9   -0.23475875E+02   -0.38703263E-10    0.29416414E-05
+ 
+ Total Energy:                     -23.2443472888 H
+ Total Mermin free energy:         -23.2443472888 H
+ Maximal force component:            0.403440E-01
+ 
+ Geometry converged

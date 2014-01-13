@@ -6,6 +6,9 @@ PROGRAM SCC_Disp
   ! 
   ! No Hbond correction
   !
+
+  ! The program works with atomic units but print 
+  ! the final energy in kcal/mol
   
   USE precision
   USE utils
@@ -45,6 +48,7 @@ PROGRAM SCC_Disp
   character(kch),parameter :: excelfile = 'excelfile.check'
 
   call read_stdin
+  if( dfprint ) CALL printDf()
 
   if( debugflag == 'UP' ) debug=.true.
 
@@ -52,7 +56,7 @@ PROGRAM SCC_Disp
   Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
   Ni_size => ifrmt(1)
   
-  ! Retrieve data form atomdata.data
+  ! Retrieve data from atomdata.data
   call get_atomdata(atomdatafile) ! Now I can use the atomdata array
   
   ! Retrive name of atoms
@@ -63,26 +67,29 @@ PROGRAM SCC_Disp
   
 
   ! => Initialize arrays
-  if( debug ) call openfile(bvalues,'replace')
-  if( debug ) write(fiit(bvalues),*) '#ATOM_TYPE_i ATOM_TYPE_j   alpha  N  Z' 
-
   allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom))
-  do i = 1,natom                                                  ! Some useful arrays:
-     Zaim(i) = atomdata(findatom(coords(i)%atom_type))%Z          ! - Z_i of atoms in xyz file
-     C6free(i) = atomdata(findatom(coords(i)%atom_type))%D3C6   ! - C6free by 3D for "   "
-     polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3 ! -polar for    "   "
-     rvdw(i) = atomdata(findatom(coords(i)%atom_type))%vdWr / BohrAngst ! - Bondi radii
-     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
-     basym_ii(i) = basym(polar(i),Ni(i),Zaim(i))   ! - bii of the damping function for atom i (it has to be multiplied by b0).
+  do i = 1,natom                                                                         ! Some useful arrays:
+     Zaim(i) = atomdata(findatom(coords(i)%atom_type))%Z                                 ! - Z_i of atoms in xyz file
+     C6free(i) = atomdata(findatom(coords(i)%atom_type))%D3C6                            ! - C6free by 3D for "   "
+     polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3    ! - polar for        "   "
+     rvdw(i) = atomdata(findatom(coords(i)%atom_type))%vdWr / BohrAngst                  ! - Bondi radii
+     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
+     basym_ii(i) = basym(polar(i),Ni(i),Zaim(i))                                         ! - bii of the damping function for atom i (it has to be multiplied by b0).
   end do
 
-  if( debug ) call closefile(bvalues)
+  ! => C6AIM
+  C6aim(:) = (Ni(:) / dble(Zaim(:)))**2 * C6free(:)                  ! D3
+  
 
  
   if( debug )then
+     call openfile(bvalues,'replace')                                     
      call openfile(chrgfile,'replace')
      call openfile(coordfile,'replace')
+     call openfile(C6aimfile,'replace')
+     write(fiit(bvalues),*) '#ATOM_TYPE_i  b_asym  alpha  N  Z' 
      write(fiit(chrgfile),*) '# ATOM_TYPE  MULL_POP   INCHARGE   Z   RvdW  C6free'
+     write(fiit(C6aimfile),*) '# ATOM_TYPE   MULL_POP   Z   N/Z  (N/Z)**2  C6aim   C6free'
      write(fiit(coordfile),*) natom
      write(fiit(coordfile),*)
      do i = 1,natom
@@ -90,37 +97,25 @@ PROGRAM SCC_Disp
              &%atom_type, Ni(i),atomdata(findatom(coords(i)&
              &%atom_type))%incharge,Zaim(i),rvdw(i),C6free(i) 
         write(fiit(coordfile),'(A3,3F15.5)') coords(i)%atom_type, coords(i)%coord
-     end do
-     call closefile(fiit(chrgfile))
-     call closefile(fiit(coordfile))
-  end if
-
-
-  
-
-  ! => C6AIM
-  C6aim(:) = (Ni(:) / dble(Zaim(:)))**2 * C6free(:)                  ! D3
-  
-  if( debug )then
-     call openfile(C6aimfile,'replace')
-     write(fiit(C6aimfile),*) '# ATOM_TYPE   MULL_POP   Z   N/Z  (N/Z)**2  C6aim   C6free'
-     do i = 1,natom
+        write(fiit(bvalues),'(1A3,3F8.3,I5)') coords(i)%atom_type, basym_ii(i), polar(i), Ni(i), Zaim(i)
         write(fiit(C6aimfile),'(A3,F12.4,I6,4F12.4)') &
              & coords(i)%atom_type,Ni(i),Zaim(i), (Ni(i) / dble(Zaim(i))),&
              & (Ni(i) / dble(Zaim(i)))**2,C6aim(i),C6free(i)
-!        write(fiit(C6aimfile),*) coords(i)%atom_type,Ni(i),Zaim(i),(Ni(:) / dble(Zaim(:))),(Ni(:) / dble(Zaim(:)))**2,C6aim(i),C6free(i)
      end do
+     call closefile(fiit(chrgfile))
+     call closefile(fiit(coordfile))
+     call closefile(bvalues)
      call closefile(fiit(C6aimfile))
   end if
 
 
   ! ==> STARTING ATOMIC LOOP <== !
   if( debug ) call openfile(energydbg,'replace')
-  if( debug ) write(fiit(energydbg),*) '# AT_TP(i)    AT_TP(j)    Rab    Rab0    damp   C6(i)   C6(j)  C6ab    E   Etot'
+  if( debug ) write(fiit(energydbg),*) '#AT_TP(i)    AT_TP(j)    Rab    Rab0    damp   C6(i)   C6(j)  C6ab    E_ij   Etot'
   if( debug ) call openfile(distances,'replace')
   if( debug ) write(fiit(distances),*) '# AT_TP(i)    AT_TP(j)    xi   yi   zi   xj   yj    zj Rab'
   if( debug ) call openfile(dampingfunc,'replace')
-  if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j   R0  R  b0  a  s  basymi  basymj   bij  Fd   TT   FdTTdfR0 '
+  if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j   R0  R  b0  a  s  basymi  basymj   bij  Fd   TT   dfR0 '
   if( debug ) call openfile(excelfile,'replace')
   if( debug ) write(fiit(excelfile),*) '#AT_TP(i)  AT_TP(j) Rab  Rvdw(&
        &i) Rvdw(j)  Rab0  alpha(i)  alpha(j)  C6free(i)  C6free(j)  Za&
@@ -130,15 +125,17 @@ PROGRAM SCC_Disp
 
   E = 0.0d0
   atom1: do i = 1,natom
+     print*, 'atom 1'
      Hi = IsHAtom(i) ! To use hhrep
      atom2: do j = i+1,natom
+        print*, 'atom 2'
         Hj = IsHAtom(j) ! To use hhrep
         
         Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
         
 !        Rab0 = cubsum(rvdw(i),rvdw(j))
         Rab0 = rvdw(i)+rvdw(j)
-        damp =  FdTTdf(basym_ii(i),basym_ii(j),Rab,Rab0)
+        damp =  df(dftype,basym_ii(i),basym_ii(j),Rab,Rab0)
 !        write(77,*) damp
 !        damp = 1.d0
 
@@ -163,8 +160,9 @@ PROGRAM SCC_Disp
              & coords(i)%coord, coords(j)%coord, Rab
         
         if( Hi .and. Hj ) then
-!           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
+           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
            hhrep = hcor(Rab)
+!           hhrep = 0d0
            E = E + hhrep  ! HH-repulsion correction
         end if
 
@@ -190,6 +188,7 @@ PROGRAM SCC_Disp
 
 CONTAINS
   
+
   real(kr) FUNCTION bmix(bi,bj)
     IMPLICIT NONE
     real(kr),intent(IN) :: bi,bj
@@ -198,15 +197,14 @@ CONTAINS
     
   END FUNCTION bmix
 
+
   real(kr) FUNCTION basym(alpha,N,Z)
     IMPLICIT NONE
     real(kr),intent(IN) :: alpha,N
     integer(ki),intent(IN) :: Z
     
     basym = ( 1 / alpha )**(1./3.) * ( real(Z) / N )**(1./3.)
-    if (debug) write(fiit(bvalues),'(1A3,3F8.3,I5)') coords(i)%atom_type, basym, alpha, N, Z
-    
-
+!    if (debug) write(fiit(bvalues),'(1A3,3F8.3,I5)') coords(i)%atom_type, basym, alpha, N, Z
 !    print*, 'basym', b0,alpha,Z,N  ! debug
     
   END FUNCTION basym
@@ -235,47 +233,81 @@ CONTAINS
 
   END FUNCTION cubsum
 
-  real(kr) FUNCTION  FdTTdf(basymi,basymj,R,R0)
+  real(kr) FUNCTION  df(type,basymi,basymj,R,R0)
     IMPLICIT NONE
+    integer(ki),intent(IN) :: type
     real(kr),intent(IN) :: basymi,basymj,R,R0
     real(kr) :: a,b0,s,TT,Fd,bij,x,bx
 
-!    CALL read_parameters(b0,a,s)
-
-    b0 = 2.18206081886510
-    a =  1.12451132211179
-    s =  34.9266956797606
-    
 !    b0 = 10
 !    a=1
 !    s=23
+    select case (type)
+    case (1)
+       ! From the first report
 
-    bij = bmix(b0*basymi,b0*basymj)
-    x = bij*R
+       b0 = 2d0
+       a = 0d0
+       s=0d0
+       
+       bij = bmix(b0*basymi,b0*basymj)
+       bx = bij*R
+       
+       TT = 1.d0 - &
+            & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
+            & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
+
+       df = TT
+
+       if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
+            &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
+            &,Fd,TT,df 
+       
+       
+    case (2)
+       !FdTTdf
+
+       !CALL read_parameters(b0,a,s)
+
+       b0 = 2.18206081886510
+       a =  1.12451132211179
+       s =  34.9266956797606
     
-    Fd = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
+       bij = bmix(b0*basymi,b0*basymj)
+       x = bij*R
+       
+       Fd = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
+       bx = Fd * bij * R
+       
+       TT = 1.d0 - &
+            & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
+            & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
+       
+       df = TT
+       
+!       if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
+
+       if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
+            &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
+            &,Fd,TT,df 
+       
+    case DEFAULT
+       df = 1E10
+
+    end select
+    
 !    TT = 1.d0 - &
 !         & ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + &
 !         & (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
-
-    bx = Fd * bij * R
-
-    TT = 1.d0 - &
-         & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
-         & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
-
+          
 
 !    FdTTdf = Fd * TT
-    FdTTdf = TT
 !    FdTTdf = Fd
 !    FdTTdf = 1.0d0
 
-  if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
-       &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
-       &,Fd,TT,FdTTdf 
 
-  END FUNCTION FdTTdf
-
+  END FUNCTION Df
+  
 
   SUBROUTINE read_parameters(a,b,c)
     IMPLICIT NONE
@@ -303,5 +335,34 @@ CONTAINS
     
   END SUBROUTINE die
 
-END PROGRAM SCC_Disp
+
+  SUBROUTINE printDf()
+    ! To print all the available damping function at once.
+    IMPLICIT NONE
+    integer(ki) :: i,j
+    integer(kr) :: np
+    real(kr) :: start_d,increment,end_d,d
+    
+    np = 1000000
+    start_d = 1d0
+    end_d   = 8d0
+    increment = (end_d - start_d)/np
+    
+    outer: do i = 1,10
+       d = start_d
+       write(*,*) ''
+       if( df(i,1d0,1d0,start_d,1d9) > 1E9 ) exit outer
+       do j = 1,np
+          !           write(*,'(2(F15.8,5X))') start_d, df(i,1d0,1d0,start_d,1d9)
+          ! df(type,basymi,basymj,R,R0)
+          end_d = df(i,0.5d0,0.5d0,d,1.9d0)
+          write(*,*) d, -end_d/d**6*1000
+          d = d + increment
+       enddo
+    end do outer
+    stop
+  END SUBROUTINE printDf
   
+END PROGRAM SCC_Disp
+
+   

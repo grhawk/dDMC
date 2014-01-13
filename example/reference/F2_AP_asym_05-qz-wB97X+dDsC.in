@@ -1,0 +1,78 @@
+$molecule
+1 2
+O 1.176237 0.000000 -0.200000
+C 0.369891 1.083017 -0.200000
+H 0.860605 2.049077 -0.200000
+C -0.991037 -0.691793 -0.200000
+H -1.838676 -1.365016 -0.200000
+C -0.991037 0.691793 -0.200000
+H -1.838676 1.365016 -0.200000
+C 0.369891 -1.083017 -0.200000
+H 0.860605 -2.049077 -0.200000
+O -1.161250 0.000000 2.900000
+C -0.347359 1.094894 2.900000
+H -0.850457 2.049779 2.900000
+C 0.959964 -0.717891 2.900000
+H 1.819840 -1.373246 2.900000
+C 0.959964 0.717891 2.900000
+H 1.819840 1.373246 2.900000
+C -0.347359 -1.094894 2.900000
+H -0.850457 -2.049779 2.900000
+$end
+$rem
+  JOBTYPE                   SP                        
+  EXCHANGE                  OMEGAB97X-DDSC            
+  BASIS                     DEF2-QZVP                 
+  SYMMETRY                  FALSE                     
+  MAX_SCF_CYCLES            100                       
+  SCF_ALGORITHM             DIIS                      
+  MEM_TOTAL                 1800                      
+  MEM_STATIC                400                       
+  SCF_GUESS                 SAD                       
+  THRESH                    10                        
+  unrestricted              TRUE
+$end
+
+$wb97x_ddsc
+  CC_AB           1.000000    1.794130  -12.047700   14.084700   -8.508090
+  CC_AA           1.000000   -6.905390   31.334300  -51.053300   26.442300
+  TTA            19.2971
+  TTB             1.4322
+  CX_AA           0.779640    0.661160    0.574541   -5.256710   11.638600
+  CXHF            0.222036
+  OMEGA           0.200000
+$end
+
+@@@@
+
+$molecule
+  READ
+$end
+
+$rem
+  JOBTYPE                   SP                        
+  EXCHANGE                  OMEGAB97X-DDSC            
+  BASIS                     DEF2-QZVP                 
+  SYMMETRY                  FALSE                     
+  MAX_SCF_CYCLES            100                       
+  SCF_ALGORITHM             DIIS                      
+  MEM_TOTAL                 1800                      
+  MEM_STATIC                400                       
+  SCF_GUESS                 READ                      
+  DFTVDW_JOBNUMBER          1                         
+  DFTVDW_METHOD             4                         
+  XC_GRID                   000075000302              
+  THRESH                    12  
+  unrestricted              TRUE                      
+$end
+
+$wb97x_ddsc
+  CC_AB           1.000000    1.794130  -12.047700   14.084700   -8.508090
+  CC_AA           1.000000   -6.905390   31.334300  -51.053300   26.442300
+  TTA            19.2971
+  TTB             1.4322
+  CX_AA           0.779640    0.661160    0.574541   -5.256710   11.638600
+  CXHF            0.222036
+  OMEGA           0.200000
+$end
+

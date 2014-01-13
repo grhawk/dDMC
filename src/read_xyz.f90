@@ -81,14 +81,17 @@ CONTAINS
     character(2) :: HAtom(2)
     integer(ki) :: l
     
-
+    IsHAtom = .false.
+    
     HAtom=(/ ' H',' h' /)
 
     do l = 1,2
-       if( trim(adjustl(coords(index)%atom_type)) == trim(adjustl(HAtom(l))) ) IsHAtom = .true.
+       if( trim(adjustl(coords(index)%atom_type)) == trim(adjustl(HAtom(1))) ) then
+          IsHAtom = .true.
+       end if
     end do
 
-!    print*, '#',trim(adjustl(coords(index)%atom_type)),'#'
+    print*, '#',trim(adjustl(coords(index)%atom_type)),'#','   ','#',trim(adjustl(HAtom(1))),'#','   ',IsHAtom
 !    print*, '#',trim(adjustl(HAtom(1))),'#'
 
   END FUNCTION IsHAtom

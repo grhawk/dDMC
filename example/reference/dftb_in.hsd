@@ -1,0 +1,24 @@
+Geometry = GenFormat { 
+    <<< "geo_end.gen" 
+} 
+ 
+Driver = ConjugateGradient{ 
+   MaxForceComponent = 1E-4 
+   MaxSteps = 0 
+   } 
+Hamiltonian = DFTB{ 
+   MaxAngularMomentum = { 
+      C = "p" 
+      H = "s" 
+      O = "p" 
+   } 
+   SCC = Yes 
+   SlaterKosterFiles = Type2FileNames{ 
+      Prefix = /mnt/cluster2/data/petragli/Store/SK-parameters/3ob-1-1/ 
+      Separator = "-" 
+      Suffix = ".skf" 
+   } 
+} 
+Options { 
+   WriteResultsTag = Yes  
+} 
