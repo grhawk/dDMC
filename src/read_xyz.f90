@@ -91,7 +91,7 @@ CONTAINS
        end if
     end do
 
-    print*, '#',trim(adjustl(coords(index)%atom_type)),'#','   ','#',trim(adjustl(HAtom(1))),'#','   ',IsHAtom
+!    print*, '#',trim(adjustl(coords(index)%atom_type)),'#','   ','#',trim(adjustl(HAtom(1))),'#','   ',IsHAtom
 !    print*, '#',trim(adjustl(HAtom(1))),'#'
 
   END FUNCTION IsHAtom
