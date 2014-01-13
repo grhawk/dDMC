@@ -246,7 +246,7 @@ CONTAINS
     case (1)
        ! From the first report
 
-       b0 = 2d0
+       b0 = 1.5d0
        a = 0d0
        s=0d0
        
@@ -284,6 +284,33 @@ CONTAINS
             & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
        
        df = TT
+       
+!       if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
+
+       if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
+            &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
+            &,Fd,TT,df 
+
+    case (3)
+       !Fd*TTdf
+
+       !CALL read_parameters(b0,a,s)
+
+       b0 = 2.18206081886510
+       a =  1.12451132211179
+       s =  34.9266956797606
+    
+       bij = bmix(b0*basymi,b0*basymj)
+       x = bij*R
+       
+       Fd = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
+       bx = bij * R
+       
+       TT = 1.d0 - &
+            & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
+            & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
+       
+       df = TT*Fd
        
 !       if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
 
@@ -339,28 +366,36 @@ CONTAINS
   SUBROUTINE printDf()
     ! To print all the available damping function at once.
     IMPLICIT NONE
-    integer(ki) :: i,j
+    integer(ki) :: i,j,k
     integer(kr) :: np
     real(kr) :: start_d,increment,end_d,d
+    real(kr),allocatable :: df_value(:)
+    integer(kr),parameter :: max_dftype = 10
+    character(kch) :: format_string
     
-    np = 1000000
-    start_d = 1d0
+    allocate(df_value(max_dftype))
+    
+    np = 10000
+    start_d = 0.1d0
     end_d   = 8d0
     increment = (end_d - start_d)/np
     
-    outer: do i = 1,10
-       d = start_d
-       write(*,*) ''
-       if( df(i,1d0,1d0,start_d,1d9) > 1E9 ) exit outer
-       do j = 1,np
-          !           write(*,'(2(F15.8,5X))') start_d, df(i,1d0,1d0,start_d,1d9)
-          ! df(type,basymi,basymj,R,R0)
-          end_d = df(i,0.5d0,0.5d0,d,1.9d0)
-          write(*,*) d, -end_d/d**6*1000
-          d = d + increment
-       enddo
-    end do outer
+    d = start_d
+    do j = 1,np
+       dftype: do i = 1,max_dftype
+          if( df(i,1d0,1d0,start_d,1d9) > 1E9 ) exit dftype
+          df_value(i) = df(i,0.5d0,0.5d0,d,1.9d0)
+       end do dftype
+       write(format_string,*) i
+       format_string = '('//trim(format_string)//'F15.8)'
+       write(*,format_string) d, (-df_value(k)/d**6*1000, k=1,i-1)
+       d = d + increment
+    enddo
+    
+    
+    
     stop
+    
   END SUBROUTINE printDf
   
 END PROGRAM SCC_Disp
