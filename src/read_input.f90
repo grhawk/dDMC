@@ -9,12 +9,12 @@ MODULE read_input
   USE precision
   USE string_tools
   IMPLICIT NONE
-  character(kch) :: inputtagfile,inputcoofile,atomdatafile,debugflag
+  character(kch) :: inputtagfile,inputcoofile,atomdatafile,debugflag,readparamsflag
   integer(ki) :: dftype
   logical :: dfprint
 
   PRIVATE
-  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag,dftype,dfprint
+  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag,dftype,dfprint,readparamsflag
   PUBLIC :: read_stdin
   
 CONTAINS
@@ -35,7 +35,7 @@ CONTAINS
        if( junk(1:1) /= '#' .and. junk(1:1) /= '' ) then
           
           call shrink_string(junk,'=',nojunk,nstring)
-!          write(0,*) 'asd',junk,nojunk,nstring ! debug
+!          write(0,* ) junk,nojunk,nstring ! debug
           if( nstring /= 2 ) stop 'ERROR: checkpoint 1 in read_input'
           
           select case (trim(adjustl(nojunk(1))))
@@ -51,12 +51,16 @@ CONTAINS
           case ('debugflag')
              debugflag = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
+          case ('readparamsflag')
+             readparamsflag = trim(adjustl(nojunk(2)))
+             ninput = ninput + 1
           case ('dftype')
              dummy = char2int(nojunk(2),1)
              dftype = dummy(1)
              ninput = ninput + 1
           case ('dfprint')
              dfprint = .true.
+             readparamsflag = 'DOWN'
              exit readfile
           case default
              write(0,*) 'INPUT ERROR IN LINE ',nl
@@ -65,7 +69,7 @@ CONTAINS
        end if
     end do readfile
     
-    if( ninput /= 5 .and. .not. dfprint ) stop 'ERROR: wrong parameters in input'
+    if( ninput /= 6 .and. .not. dfprint ) stop 'ERROR: wrong parameters in input'
     
 !    call starting_program_announce
     

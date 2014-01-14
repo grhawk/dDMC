@@ -9,7 +9,10 @@ PROGRAM SCC_Disp
 
   ! The program works with atomic units but print 
   ! the final energy in kcal/mol
-  
+
+  ! To check that all is working properly, the dftype = 1 with parameter = 1.5 using 
+  ! the F2_AP_asym_05.xyz, should give as result -7.381707320 Kcal/mol
+
   USE precision
   USE utils
   USE read_tag_dftbp
@@ -17,6 +20,7 @@ PROGRAM SCC_Disp
   USE read_atomdata
   USE file_tools
   USE read_input  ! TODO better
+  USE dampingfunctions
   USE parameters, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
 
@@ -36,7 +40,7 @@ PROGRAM SCC_Disp
 
   logical :: Hi,Hj
 
-  logical :: debug
+  logical :: debug = .false.
   character(kch),parameter :: chrgfile = 'chargefile.check'
   character(kch),parameter :: coordfile = 'coordinate.check'
   character(kch),parameter :: C6aimfile = 'C6aim.check'
@@ -48,12 +52,16 @@ PROGRAM SCC_Disp
   character(kch),parameter :: excelfile = 'excelfile.check'
 
   character(kch),parameter :: tagfile = 'dDMC.tag'
-
+!  integer(ki) :: dftype
 
   call read_stdin
-  if( dfprint ) CALL printDf()
 
   if( debugflag == 'UP' ) debug=.true.
+  if( readparamsflag == 'UP' ) read_param_from_file=.true.
+  CALL initialize_dfmodule()
+  if( dfprint ) CALL printDf()
+
+
 
   call get_tag_data('atomic_charges',inputtagfile) 
   Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
@@ -118,7 +126,7 @@ PROGRAM SCC_Disp
   if( debug ) call openfile(distances,'replace')
   if( debug ) write(fiit(distances),*) '# AT_TP(i)    AT_TP(j)    xi   yi   zi   xj   yj    zj Rab'
   if( debug ) call openfile(dampingfunc,'replace')
-  if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j   R0  R  b0  a  s  basymi  basymj   bij  Fd   TT   dfR0 '
+  if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j   R0  R  b0  a  s  basymi  basymj   bij  Fd   TT   dfR0  dftype'
   if( debug ) call openfile(excelfile,'replace')
   if( debug ) write(fiit(excelfile),*) '#AT_TP(i)  AT_TP(j) Rab  Rvdw(&
        &i) Rvdw(j)  Rab0  alpha(i)  alpha(j)  C6free(i)  C6free(j)  Za&
@@ -136,7 +144,7 @@ PROGRAM SCC_Disp
         
 !        Rab0 = cubsum(rvdw(i),rvdw(j))
         Rab0 = rvdw(i)+rvdw(j)
-        damp =  df(dftype,basym_ii(i),basym_ii(j),Rab,Rab0)
+        damp =  df(basym_ii(i),basym_ii(j),Rab,Rab0)
 !        write(77,*) damp
 !        damp = 1.d0
 
@@ -184,25 +192,16 @@ PROGRAM SCC_Disp
      call closefile(fiit(c6last))
   end if
 
-  
   write(*,'(f20.12)') E*HartKcalMol
+
   CALL openfile(tagfile,'replace')
   write(fiit(tagfile),*) 'correction_energy     1'
-  write(fiit(tagfile),'(E30.20)') E*HartKcalMol
+  write(fiit(tagfile),'(E30.20)') E
   CALL closefile(tagfile)
   
 
 CONTAINS
   
-
-  real(kr) FUNCTION bmix(bi,bj)
-    IMPLICIT NONE
-    real(kr),intent(IN) :: bi,bj
-
-    bmix = 2 * bi * bj / (bi + bj)
-    
-  END FUNCTION bmix
-
 
   real(kr) FUNCTION basym(alpha,N,Z)
     IMPLICIT NONE
@@ -215,21 +214,6 @@ CONTAINS
     
   END FUNCTION basym
   
-  real(kr) FUNCTION hCor(R)
-    IMPLICIT NONE
-    real(kr),intent(IN) :: R
-    real(kr) :: A,b!,dummy
-
-!    CALL read_parameters(A,b,dummy)
-
-    A = 1.49689540654504
-    b = 1.67162251877518
-    
-    hCor = A * exp( -b * R )
-    
-!    print*, "Inside Function: ",hcor, A, b ,R ! debug
-    
-  END FUNCTION hCor
 
   real(kr) FUNCTION cubsum(a,b)
     IMPLICIT NONE
@@ -239,124 +223,6 @@ CONTAINS
 
   END FUNCTION cubsum
 
-  real(kr) FUNCTION  df(type,basymi,basymj,R,R0)
-    IMPLICIT NONE
-    integer(ki),intent(IN) :: type
-    real(kr),intent(IN) :: basymi,basymj,R,R0
-    real(kr) :: a,b0,s,TT,Fd,bij,x,bx
-
-!    b0 = 10
-!    a=1
-!    s=23
-    select case (type)
-    case (1)
-       ! From the first report
-
-       b0 = 1.5d0
-       a = 0d0
-       s=0d0
-       
-       bij = bmix(b0*basymi,b0*basymj)
-       bx = bij*R
-       
-       TT = 1.d0 - &
-            & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
-            & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
-
-       df = TT
-
-       if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
-            &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
-            &,Fd,TT,df 
-       
-       
-    case (2)
-       !FdTTdf
-
-       !CALL read_parameters(b0,a,s)
-
-       b0 = 2.18206081886510
-       a =  1.12451132211179
-       s =  34.9266956797606
-    
-       bij = bmix(b0*basymi,b0*basymj)
-       x = bij*R
-       
-       Fd = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
-       bx = Fd * bij * R
-       
-       TT = 1.d0 - &
-            & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
-            & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
-       
-       df = TT
-       
-!       if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
-
-       if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
-            &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
-            &,Fd,TT,df 
-
-    case (3)
-       !Fd*TTdf
-
-       !CALL read_parameters(b0,a,s)
-
-       b0 = 2.18206081886510
-       a =  1.12451132211179
-       s =  34.9266956797606
-    
-       bij = bmix(b0*basymi,b0*basymj)
-       x = bij*R
-       
-       Fd = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
-       bx = bij * R
-       
-       TT = 1.d0 - &
-            & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
-            & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
-       
-       df = TT*Fd
-       
-!       if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
-
-       if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
-            &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
-            &,Fd,TT,df 
-       
-    case DEFAULT
-       df = 1E10
-
-    end select
-    
-!    TT = 1.d0 - &
-!         & ( exp( -bij * R ) * (1.d0 + bij*R + (bij*R)**2.d0/2.d0 + (bij*R)**3.d0/6.d0 + &
-!         & (bij*R)**4.d0/24.d0 + (bij*R)**5.d0/120.d0 + (bij*R)**6.d0/720.d0) )
-          
-
-!    FdTTdf = Fd * TT
-!    FdTTdf = Fd
-!    FdTTdf = 1.0d0
-
-
-  END FUNCTION Df
-  
-
-  SUBROUTINE read_parameters(a,b,c)
-    IMPLICIT NONE
-    real(kr),intent(OUT) :: a,b,c
-    integer(ki) :: err
-    character(kch) :: filename='parameters.dat'
-
-    err = 0
-    call openfile(filename,'read')
-    read(fiit(filename),*,iostat=err) a
-    read(fiit(filename),*,iostat=err) b
-    read(fiit(filename),*,iostat=err) c
-    call closefile(filename)
-    if( err /= 0 ) call die('ERROR: reading parameters.dat')
-
-  END SUBROUTINE read_parameters
     
 
   SUBROUTINE die(msg)
@@ -369,41 +235,6 @@ CONTAINS
   END SUBROUTINE die
 
 
-  SUBROUTINE printDf()
-    ! To print all the available damping function at once.
-    IMPLICIT NONE
-    integer(ki) :: i,j,k
-    integer(kr) :: np
-    real(kr) :: start_d,increment,end_d,d
-    real(kr),allocatable :: df_value(:)
-    integer(kr),parameter :: max_dftype = 10
-    character(kch) :: format_string
-    
-    allocate(df_value(max_dftype))
-    
-    np = 10000
-    start_d = 0.1d0
-    end_d   = 8d0
-    increment = (end_d - start_d)/np
-    
-    d = start_d
-    do j = 1,np
-       dftype: do i = 1,max_dftype
-          if( df(i,1d0,1d0,start_d,1d9) > 1E9 ) exit dftype
-          df_value(i) = df(i,0.5d0,0.5d0,d,1.9d0)
-       end do dftype
-       write(format_string,*) i
-       format_string = '('//trim(format_string)//'F15.8)'
-       write(*,format_string) d, (-df_value(k)/d**6*1000, k=1,i-1)
-       d = d + increment
-    enddo
-    
-    
-    
-    stop
-    
-  END SUBROUTINE printDf
-  
 END PROGRAM SCC_Disp
 
    
