@@ -18,7 +18,7 @@ MODULE dampingfunctions
 
 ! PRIVATE
   integer(ki),parameter :: df_num = 3 ! number of available damping function
-  logical :: hh_read_param = .false., df_read_param = .false.
+  logical :: debug = .true.
   type(df_function) :: df_functions(0:df_num)
   
 
@@ -101,10 +101,13 @@ CONTAINS
     IMPLICIT NONE
     real(kr),intent(IN) :: basymi,basymj,R,R0
     real(kr) :: TT,Fd,bij,x,bx
+    integer(ki) :: k
 
     select case (dftype)
     case (1)
        ! From the first report
+
+!       write(*,*) (df_functions(dftype)%parameters(k), k = 1,df_functions(dftype)%n_par)
        
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
             &     df_functions(dftype)%parameters(1)*basymj)
@@ -189,24 +192,36 @@ CONTAINS
   
 
 
-  SUBROUTINE read_params(n,parameters)
+  SUBROUTINE read_params(n,ppp)
     IMPLICIT NONE
-    real(kr),intent(OUT) :: parameters(:)
+    real(kr),intent(OUT) :: ppp(:)
     integer(ki),intent(IN) :: n
     integer(ki) :: err,i
-    character(kch) :: filename='parameters.dat'
+    character(kch),parameter :: filename='parameters.dat'
+    character(kch) :: junk
     real(kr) :: tmp
-    
-!    write(*,*) n
 
+!    allocate(ppp(n))
+
+!    write(*,*) n
     err = 0
+    i = 1
     call openfile(filename,'read')
-    do i = 1,n
-       read(fiit(filename),*,iostat=err) parameters(i)
-!       write(*,*) 'p -> ',parameters(i)
+    do while( i <= n )
+       read(fiit(filename),*,iostat=err) junk
+       if( junk(1:1) /= '#' .and. junk(1:1) /= '' ) then
+          backspace(fiit(filename))
+          read(fiit(filename),*,iostat=err) ppp(i)
+          if( debug ) write(0,*) 'read param: '
+          i = i + 1
+       end if
+       !       write(*,*) 'p -> ',parameters(i)
     end do
+    if( debug ) write(0,*) '-> ',(ppp(i), i = 1,n)
+    
     call closefile(filename)
     if( err /= 0 ) call die('ERROR: reading parameters.dat')
+    
     
   END SUBROUTINE read_params
 
