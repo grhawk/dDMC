@@ -18,7 +18,7 @@ MODULE dampingfunctions
 
 ! PRIVATE
   integer(ki),parameter :: df_num = 3 ! number of available damping function
-  logical :: debug = .true.
+  logical :: debug = .false.
   type(df_function) :: df_functions(0:df_num)
   
 
@@ -212,7 +212,6 @@ CONTAINS
        if( junk(1:1) /= '#' .and. junk(1:1) /= '' ) then
           backspace(fiit(filename))
           read(fiit(filename),*,iostat=err) ppp(i)
-          if( debug ) write(0,*) 'read param: '
           i = i + 1
        end if
        !       write(*,*) 'p -> ',parameters(i)
