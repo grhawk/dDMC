@@ -146,7 +146,7 @@ CONTAINS
 
     case (3)
        !Fd*TTdf
-    
+       
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
             & df_functions(dftype)%parameters(1)*basymj)
        x = bij*R
@@ -250,13 +250,22 @@ CONTAINS
   SUBROUTINE printDf()
     ! To print all the available damping function at once.
     IMPLICIT NONE
-    integer(ki) :: j,k
+    integer(ki) :: j,k,i
     integer(kr) :: np
     real(kr) :: start_d,increment,end_d,d
     real(kr),allocatable :: df_value(:)
     character(kch) :: format_string
+    logical :: param_read = .false.
     
     allocate(df_value(df_num))
+
+    inquire(FILE='parameters.dat', EXIST=param_read)
+    
+    if( param_read ) then
+       do i = 1,df_num
+          CALL read_params(df_functions(i)%n_par,df_functions(i)%parameters)
+       end do
+    end if
     
     np = 10000
     start_d = 0.1d0
