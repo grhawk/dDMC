@@ -268,14 +268,14 @@ CONTAINS
     end if
     
     np = 10000
-    start_d = 0.1d0
-    end_d   = 8d0
+    start_d = 1.0d0
+    end_d   = 16d0
     increment = (end_d - start_d)/np
     
     d = start_d
     do j = 1,np
        do dftype = 1,df_num
-          df_value(dftype) = df(0.5d0,0.5d0,d,1.9d0)
+          df_value(dftype) = df(0.5d0,0.5d0,d,6.4d0)
 !          write(*,*) df(0.5d0,0.5d0,d,1.9d0)
        end do
        write(format_string,*) df_num+1
