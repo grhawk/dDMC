@@ -157,7 +157,7 @@ PROGRAM SCC_Disp
            
         if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
-             & damp, C6aim(i), C6aim(j), C6ab, damp * C6ab / Rab**6, E
+             & damp, C6aim(i), C6aim(j), C6ab, -damp * C6ab / Rab**6, E
         if( debug ) write(fiit(excelfile),'(2A3,2X,20(X,F15.5))')&
              & coords(i)%atom_type, coords(j)%atom_type, Rab, rvdw(i)&
              &, rvdw(j), Rab0, polar(i), polar(j), C6free(i),&
@@ -171,7 +171,7 @@ PROGRAM SCC_Disp
         if( Hi .and. Hj ) then
 !           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
            hhrep = hcor(Rab)
-!           hhrep = 0d0
+           hhrep = 0d0
            E = E + hhrep  ! HH-repulsion correction
         end if
 
