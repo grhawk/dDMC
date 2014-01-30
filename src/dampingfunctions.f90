@@ -39,7 +39,7 @@ CONTAINS
        else
           CALL read_params(df_functions(dftype)%n_par,df_functions(dftype)%parameters)
        end if
-
+ 
     end if
   END SUBROUTINE initialize_dfmodule
 
@@ -53,7 +53,7 @@ CONTAINS
     df_functions(type)%n_par = 2
     allocate(df_functions(type)%parameters(df_functions(type)%n_par))
     df_functions(type)%parameters = (/ 1.49689540654504, 1.67162251877518 /)
-    
+!                                             A                  b    
     type = 1
     df_functions(type)%index = 1
     df_functions(type)%name  = 'TT'
@@ -91,7 +91,7 @@ CONTAINS
 
     hCor = A * exp( -b * R )
     
-!    print*, "Inside Function: ",hcor, A, b ,R ! debug
+!    print*, "Inside Function: ", hcor, A, b ,R ! debug
     
   END FUNCTION hCor
 
