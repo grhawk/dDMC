@@ -42,9 +42,9 @@ CONTAINS
 !!$    end do readfile
 !!$    call closefile(file)
 
-    print*, npop
+!    print*, npop
     do i =1,npop
-       print*, pop(i)
+!       print*, pop(i)
     end do
   END SUBROUTINE read_charge_gf
   
