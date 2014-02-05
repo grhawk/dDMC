@@ -63,31 +63,29 @@ PROGRAM SCC_Disp
   if( dfprint ) CALL printDf()
 
 
-  select case( tagtype )
-  case ('dftbp') 
-     call get_tag_data('atomic_charges',inputtagfile) 
-     Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
-     Ni_size => ifrmt(1)
-     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
-  case ('column')
-     call read_charge_gf(inputtagfile) ! Read the charge from a column.
-     Ni => pop
-     Ni_size => npop
-  case default
-     call get_tag_data('atomic_charges',inputtagfile) 
-     Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
-     Ni_size => ifrmt(1)
-     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
-  end select
-  
-  
   ! Retrieve data from atomdata.data
   call get_atomdata(atomdatafile) ! Now I can use the atomdata array
   
   ! Retrive name of atoms
   call get_coords(inputcoofile,natom)
-  
 
+  select case( tagtype )
+  case ('dftbp') 
+     call dftbp_tag()
+  case ('column')
+     call read_charge_gf(inputtagfile) ! Read the charge from a column.
+     Ni => pop
+     Ni_size => npop
+  case default
+     call dftbp_tag()
+!!$     call get_tag_data('atomic_charges',inputtagfile) 
+!!$     Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
+!!$     Ni_size => ifrmt(1)
+!!$     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
+!     print*, 'TEST1'
+  end select
+  
+  
   if( Ni_size /= natom ) stop 'ERROR: check 1' ! Controls
   
 
@@ -215,6 +213,15 @@ PROGRAM SCC_Disp
 
 CONTAINS
   
+  SUBROUTINE dftbp_tag()
+    call get_tag_data('atomic_charges',inputtagfile) 
+    Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
+    Ni_size => ifrmt(1)
+    do i = 1,natom
+       Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
+    end do
+  END SUBROUTINE dftbp_tag
+
 
   real(kr) FUNCTION basym(alpha,N,Z)
     IMPLICIT NONE
