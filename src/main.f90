@@ -21,6 +21,7 @@ PROGRAM SCC_Disp
   USE file_tools
   USE read_input  ! TODO better
   USE dampingfunctions
+  USE read_gf
   USE parameters, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
 
@@ -62,10 +63,23 @@ PROGRAM SCC_Disp
   if( dfprint ) CALL printDf()
 
 
-
-  call get_tag_data('atomic_charges',inputtagfile) 
-  Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
-  Ni_size => ifrmt(1)
+  select case( tagtype )
+  case ('dftbp') 
+     call get_tag_data('atomic_charges',inputtagfile) 
+     Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
+     Ni_size => ifrmt(1)
+     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
+  case ('column')
+     call read_charge_gf(inputtagfile) ! Read the charge from a column.
+     Ni => pop
+     Ni_size => npop
+  case default
+     call get_tag_data('atomic_charges',inputtagfile) 
+     Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
+     Ni_size => ifrmt(1)
+     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
+  end select
+  
   
   ! Retrieve data from atomdata.data
   call get_atomdata(atomdatafile) ! Now I can use the atomdata array
@@ -84,7 +98,6 @@ PROGRAM SCC_Disp
      C6free(i) = atomdata(findatom(coords(i)%atom_type))%D3C6                            ! - C6free by 3D for "   "
      polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3    ! - polar for        "   "
      rvdw(i) = atomdata(findatom(coords(i)%atom_type))%vdWr / BohrAngst                  ! - Bondi radii
-     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
      basym_ii(i) = basym(polar(i),Ni(i),Zaim(i))                                         ! - bii of the damping function for atom i (it has to be multiplied by b0).
   end do
 
@@ -171,7 +184,7 @@ PROGRAM SCC_Disp
         if( Hi .and. Hj ) then
 !           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
            hhrep = hcor(Rab)
-           hhrep = 0d0
+!           hhrep = 0d0
            E = E + hhrep  ! HH-repulsion correction
         end if
 

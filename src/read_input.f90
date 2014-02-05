@@ -5,16 +5,17 @@ MODULE read_input
   !  atomdatafile
   !  debugflag
   !  dftype
+  !  tagtype -> Define the format of the file containing the atomic charges/population
 
   USE precision
   USE string_tools
   IMPLICIT NONE
-  character(kch) :: inputtagfile,inputcoofile,atomdatafile,debugflag,readparamsflag
+  character(kch) :: inputtagfile,inputcoofile,atomdatafile,debugflag,readparamsflag,tagtype
   integer(ki) :: dftype
   logical :: dfprint
 
   PRIVATE
-  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag,dftype,dfprint,readparamsflag
+  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag,dftype,dfprint,readparamsflag,tagtype
   PUBLIC :: read_stdin
   
 CONTAINS
@@ -58,6 +59,8 @@ CONTAINS
              dummy = char2int(nojunk(2),1)
              dftype = dummy(1)
              ninput = ninput + 1
+          case ('tagtype')
+             tagtype = trim(adjustl(nojunk(2)))
           case ('dfprint')
              dfprint = .true.
              readparamsflag = 'DOWN'
