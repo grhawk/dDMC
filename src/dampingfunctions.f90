@@ -272,6 +272,7 @@ CONTAINS
     end_d   = 16d0
     increment = (end_d - start_d)/np
     
+    write(*,*)'#  Distance/bohr  df=1  df=2  df=3'
     d = start_d
     do j = 1,np
        do dftype = 1,df_num
