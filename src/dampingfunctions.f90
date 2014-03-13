@@ -132,6 +132,7 @@ CONTAINS
        x = bij*R
        
 !       Fd = 0.5*( 1.d0 + tanh( s * ( x / ( a * R0 ) - 1.d0 ) ) )
+!            0.5*(1+tanh(23.0*(x/6.5-1)))
        Fd = 0.5*( 1.d0 + tanh( df_functions(dftype)%parameters(3) * &
             & ( x / ( df_functions(dftype)%parameters(2) * R0 ) - 1.d0 ) ) )
        bx = Fd * bij * R
@@ -149,8 +150,9 @@ CONTAINS
        
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
             & df_functions(dftype)%parameters(1)*basymj)
-       x = bij*R
-       
+!       x = bij*R
+       x = R
+!            0.5*(1+tanh(23.0*(x/6.5-1)))       
        Fd = 0.5*( 1.d0 + tanh( df_functions(dftype)%parameters(3) * &
             & ( x / ( df_functions(dftype)%parameters(2) * R0 ) - 1.d0 ) ) )
 
@@ -268,20 +270,20 @@ CONTAINS
     end if
     
     np = 10000
-    start_d = 1.0d0
-    end_d   = 16d0
+    start_d = .5d0
+    end_d   = 8d0
     increment = (end_d - start_d)/np
     
-    write(*,*)'#  Distance/bohr  df=1  df=2  df=3'
+    write(*,*)'#  Distance/bohr  r**6  df=1  df=2  df=3'
     d = start_d
     do j = 1,np
        do dftype = 1,df_num
           df_value(dftype) = df(0.5d0,0.5d0,d,6.4d0)
 !          write(*,*) df(0.5d0,0.5d0,d,1.9d0)
        end do
-       write(format_string,*) df_num+1
+       write(format_string,*) df_num+2
        format_string = '('//trim(format_string)//'F15.8)'
-       write(*,format_string) d, (-df_value(k)/d**6*1000, k=1,df_num)
+       write(*,format_string) d, -1/d**6/100, (-df_value(k)/d**6*1000, k=1,df_num)
 !       write(*,*) d, (-df_value(k)/d**6*1000, k=1,df_num)
        d = d + increment
     enddo
