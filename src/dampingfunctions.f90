@@ -145,8 +145,8 @@ CONTAINS
        
 !       if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
 
-    case (3)
-       !Fd*TTdf
+    case (3)      !------------------> THE USED ONE!!!!
+       !Fd*TTdf  
        
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
             & df_functions(dftype)%parameters(1)*basymj)
