@@ -10,12 +10,12 @@ MODULE read_input
   USE precision
   USE string_tools
   IMPLICIT NONE
-  character(kch) :: inputtagfile,inputcoofile,atomdatafile,debugflag,readparamsflag,tagtype
+  character(kch) :: inputtagfile,inputcoofile,atomdatafile,debugflag,readparamsflag,tagtype,readgradflag
   integer(ki) :: dftype
   logical :: dfprint
 
   PRIVATE
-  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag,dftype,dfprint,readparamsflag,tagtype
+  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag,dftype,dfprint,readparamsflag,tagtype,readgradflag
   PUBLIC :: read_stdin
   
 CONTAINS
@@ -61,6 +61,8 @@ CONTAINS
              ninput = ninput + 1
           case ('tagtype')
              tagtype = trim(adjustl(nojunk(2)))
+          case ('gradient')
+             readgradflag = trim(adjustl(nojunk(2)))
           case ('dfprint')
              dfprint = .true.
              readparamsflag = 'DOWN'

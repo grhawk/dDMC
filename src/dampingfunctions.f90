@@ -3,6 +3,7 @@ MODULE dampingfunctions
   USE precision
   USE file_tools
   USE read_input
+  USE read_xyz
 
   IMPLICIT NONE
   TYPE,private :: df_function
@@ -24,7 +25,8 @@ MODULE dampingfunctions
 
   PRIVATE
   PUBLIC read_param_from_file, dftype
-  PUBLIC initialize_dfmodule,df,printDf,hcor
+  PUBLIC initialize_dfmodule,df,printDf,hcor,dfp
+
   
 CONTAINS
   
@@ -94,6 +96,74 @@ CONTAINS
 !    print*, "Inside Function: ", hcor, A, b ,R ! debug
     
   END FUNCTION hCor
+
+
+  real(kr) FUNCTION  dfp(basymi,basymj,R,R0)
+    IMPLICIT NONE
+    real(kr),intent(IN) :: basymi,basymj,R,R0
+    real(kr) :: dfpr,bij,bx
+    real(kr),dimension(3) :: xyz
+    integer(ki) :: k
+
+    select case (dftype)
+    case (1)
+       STOP 'Gradient is not implemented'
+    case(2)
+       STOP 'Gradient is not implemented'
+    case(3)
+       bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
+            & df_functions(dftype)%parameters(1)*basymj)
+       
+       dfp = -0.000694444444444444*(1.0*tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) + 1.0)* &
+            & (1.0*R0*df_functions(dftype)%parameters(2)*bij**7*R**7 + &
+            & 6.0*R0*df_functions(dftype)%parameters(2)*bij**6*R**6 + &
+            & 36.0*R0*df_functions(dftype)%parameters(2)*bij**5*R**5 + &
+            & 180.0*R0*df_functions(dftype)%parameters(2)*bij**4*R**4 + &
+            & 720.0*R0*df_functions(dftype)%parameters(2)*bij**3*R**3 + &
+            & 2160.0*R0*df_functions(dftype)%parameters(2)*bij**2*R**2 + &
+            & 4320.0*R0*df_functions(dftype)%parameters(2)*bij*R - &
+            & 4320.0*R0*df_functions(dftype)%parameters(2)*exp(bij*R) + &
+            & 4320.0*R0*df_functions(dftype)%parameters(2) + &
+            & 1.0*bij**6*df_functions(dftype)%parameters(3)*R**7* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 1.0*bij**6*df_functions(dftype)%parameters(3)*R**7 + &
+            & 6.0*bij**5*df_functions(dftype)%parameters(3)*R**6* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 6.0*bij**5*df_functions(dftype)%parameters(3)*R**6 + &
+            & 30.0*bij**4*df_functions(dftype)%parameters(3)*R**5* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 30.0*bij**4*df_functions(dftype)%parameters(3)*R**5 + &
+            & 120.0*bij**3*df_functions(dftype)%parameters(3)*R**4* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 120.0*bij**3*df_functions(dftype)%parameters(3)*R**4 + &
+            & 360.0*bij**2*df_functions(dftype)%parameters(3)*R**3* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 360.0*bij**2*df_functions(dftype)%parameters(3)*R**3 + &
+            & 720.0*bij*df_functions(dftype)%parameters(3)*R**2* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 720.0*bij*df_functions(dftype)%parameters(3)*R**2 - &
+            & 720.0*df_functions(dftype)%parameters(3)*R*exp(bij*R)* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) + &
+            & 720.0*df_functions(dftype)%parameters(3)*R*exp(bij*R) + &
+            & 720.0*df_functions(dftype)%parameters(3)*R* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 720.0*df_functions(dftype)%parameters(3)*R)*exp(-bij*R)/(R0*df_functions(dftype)%parameters(2)*R**7)
+
+    case DEFAULT
+       dfp = 1E10
+       
+    end select
+
+  END FUNCTION dfp
 
 
 

@@ -26,7 +26,7 @@ PROGRAM SCC_Disp
   IMPLICIT NONE
 
   integer(ki) :: natom
-  real(kr) :: E,C6ab,Rab0,Rab,damp,hhrep
+  real(kr) :: E,C6ab,Rab0,Rab,damp,hhrep,dfpr
 
   type(xyz_coords),pointer :: mol1(:),mol2(:)
 
@@ -36,6 +36,7 @@ PROGRAM SCC_Disp
   integer(ki),dimension(:),allocatable:: Zaim
   real(kr),dimension(:),allocatable :: C6aim,C6free
   real(kr),dimension(:),allocatable :: polar,rvdw,basym_ii
+  real(kr),dimension(:,:),allocatable :: grad
 
   integer(ki) :: i,j
 
@@ -51,6 +52,7 @@ PROGRAM SCC_Disp
   character(kch),parameter :: dampingfunc = 'damping.check'
   character(kch),parameter :: bvalues = 'basym.check'
   character(kch),parameter :: excelfile = 'excelfile.check'
+  character(kch),parameter :: graddbg = 'gradloop.check'
 
   character(kch),parameter :: tagfile = 'dDMC.tag'
 !  integer(ki) :: dftype
@@ -90,7 +92,7 @@ PROGRAM SCC_Disp
   
 
   ! => Initialize arrays
-  allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom))
+  allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom),grad(natom,3))
   do i = 1,natom                                                                         ! Some useful arrays:
      Zaim(i) = atomdata(findatom(coords(i)%atom_type))%Z                                 ! - Z_i of atoms in xyz file
      C6free(i) = atomdata(findatom(coords(i)%atom_type))%D3C6                            ! - C6free by 3D for "   "
@@ -134,6 +136,8 @@ PROGRAM SCC_Disp
   ! ==> STARTING ATOMIC LOOP <== !
   if( debug ) call openfile(energydbg,'replace')
   if( debug ) write(fiit(energydbg),*) '#AT_TP(i)    AT_TP(j)    Rab    Rab0    damp   C6(i)   C6(j)  C6ab    E_ij   Etot'
+  if( debug ) call openfile(graddbg,'replace')
+  if( debug ) write(fiit(graddbg),*) '#AT_TP(i)    AT_TP(j)    Rab    Rab0    dfp    C6ab    Fij FTOT'
   if( debug ) call openfile(distances,'replace')
   if( debug ) write(fiit(distances),*) '# AT_TP(i)    AT_TP(j)    xi   yi   zi   xj   yj    zj Rab'
   if( debug ) call openfile(dampingfunc,'replace')
@@ -146,6 +150,7 @@ PROGRAM SCC_Disp
 
 
   E = 0.0d0
+  grad(:,:) = 0.d0
   atom1: do i = 1,natom
      Hi = IsHAtom(i) ! To use hhrep
      atom2: do j = i+1,natom
@@ -156,6 +161,7 @@ PROGRAM SCC_Disp
 !        Rab0 = cubsum(rvdw(i),rvdw(j))
         Rab0 = rvdw(i)+rvdw(j)
         damp =  df(basym_ii(i),basym_ii(j),Rab,Rab0)
+        dfpr = dfp(basym_ii(i),basym_ii(j),Rab,Rab0)
 !        write(77,*) damp
 !        damp = 1.d0
 
@@ -165,10 +171,15 @@ PROGRAM SCC_Disp
         
         
         E =  E - damp * C6ab / Rab**6   ! Dispersion Energy
+        
+        grad(i,:) = grad(i,:) + dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab
            
         if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
              & damp, C6aim(i), C6aim(j), C6ab, -damp * C6ab / Rab**6, E
+        if( debug ) write(fiit(graddbg),'(2A3,2X,7(X,F15.5))') &
+             & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
+             & dfpr, C6ab, grad(i,1), grad(i,2), grad(i,3)
         if( debug ) write(fiit(excelfile),'(2A3,2X,20(X,F15.5))')&
              & coords(i)%atom_type, coords(j)%atom_type, Rab, rvdw(i)&
              &, rvdw(j), Rab0, polar(i), polar(j), C6free(i),&
@@ -181,12 +192,13 @@ PROGRAM SCC_Disp
         
         if( Hi .and. Hj ) then
 !           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
-           hhrep = hcor(Rab)
-!           hhrep = 0d0
+!           hhrep = hcor(Rab)
+           hhrep = 0d0
            E = E + hhrep  ! HH-repulsion correction
         end if
 
      end do atom2
+     
   end do atom1
 
   if( debug ) call closefile(energydbg)
@@ -204,6 +216,9 @@ PROGRAM SCC_Disp
   end if
 
   write(*,'(f20.12)') E*HartKcalMol
+  if (readgradflag == 'UP') then 
+     write(*,'(A3, 3g20.12)') (coords(i)%atom_type,grad(i,:)*HartKcalMol*BohrAngst, i = 1,natom)
+  end if
 
   CALL openfile(tagfile,'replace')
   write(fiit(tagfile),*) 'correction_energy     1'
