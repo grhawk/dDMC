@@ -248,6 +248,10 @@ PROGRAM SCC_Disp
   CALL openfile(tagfile,'replace')
   write(fiit(tagfile),*) 'correction_energy     1'
   write(fiit(tagfile),'(E30.20)') E
+  write(fiit(tagfile),*) 'forces    3,',natom
+  do i = 1,natom
+     write(fiit(tagfile),'(3E30.20)') (grad(i,j), j=1,3)
+  end do
   CALL closefile(tagfile)
   
 
