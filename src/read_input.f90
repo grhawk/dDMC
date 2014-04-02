@@ -74,7 +74,7 @@ CONTAINS
        end if
     end do readfile
     
-    if( ninput /= 6 .and. .not. dfprint ) stop 'ERROR: wrong parameters in input'
+!    if( ninput /= 6 .and. .not. dfprint ) stop 'ERROR: wrong parameters in input'
     
 !    call starting_program_announce
     
@@ -87,6 +87,11 @@ CONTAINS
     write(0,*) 'file tag: #', inputtagfile,"#"
     write(0,*) 'file geometry: ', inputcoofile
     write(0,*) 'atomic data: ', atomdatafile
+    write(0,*) 'dftype: ',dftype
+    write(0,*) 'tagtype: ',tagtype
+    write(0,*) 'readparamsflag: ',readparamsflag
+    write(0,*) 'gradient: ',readgradflag
+    write(0,*) 'debug: ',debugflag
     
   END SUBROUTINE starting_program_announce
 
