@@ -162,6 +162,7 @@ PROGRAM SCC_Disp
         Rab0 = rvdw(i)+rvdw(j)
         damp =  df(basym_ii(i),basym_ii(j),Rab,Rab0)
         dfpr = dfp(basym_ii(i),basym_ii(j),Rab,Rab0)
+
 !        write(77,*) damp
 !        damp = 1.d0
 
@@ -172,7 +173,8 @@ PROGRAM SCC_Disp
         
         E =  E - damp * C6ab / Rab**6   ! Dispersion Energy
         
-        grad(i,:) = grad(i,:) + dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab
+        dfpr = dfp(basym_ii(i),basym_ii(j),Rab,Rab0)
+        grad(i,:) = grad(i,:) - dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab
            
         if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
@@ -201,10 +203,33 @@ PROGRAM SCC_Disp
      
   end do atom1
 
+
+  grad(:,:) = 0.d0
+  do i = 1,natom
+     do j = 1,natom
+        if (j /= i) then
+           Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
+           Rab0 = rvdw(i)+rvdw(j)
+           dfpr = dfp(basym_ii(i),basym_ii(j),Rab,Rab0)
+           C6ab = 2 * C6aim(i) * C6aim(j) / ( C6aim(i) + C6aim(j) )
+           grad(i,:) = grad(i,:) - (dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab)
+           ! print*, i,j
+           ! print*, 'dfpr ',dfpr
+           ! print*, 'xyz - xyz ',coords(i)%coord - coords(j)%coord
+           ! print*, 'C6ab ',C6ab
+           ! print*, 'Rab ',Rab
+           ! print*, 'grad ',grad(i,:)
+        end if
+     end do
+  end do
+
+!  grad(:,:) = grad(:,:)/2
+
   if( debug ) call closefile(energydbg)
   if( debug ) call closefile(distances)
   if( debug ) call closefile(dampingfunc)
   if( debug ) call closefile(excelfile)
+  if( debug ) call closefile(graddbg)
 
   if (  debug )then
      call openfile(c6last,'replace')
@@ -217,7 +242,7 @@ PROGRAM SCC_Disp
 
   write(*,'(f20.12)') E*HartKcalMol
   if (readgradflag == 'UP') then 
-     write(*,'(A3, 3g20.12)') (coords(i)%atom_type,grad(i,:)*HartKcalMol*BohrAngst, i = 1,natom)
+     write(*,'(A3, 3g20.12)') (coords(i)%atom_type,grad(i,:)*27.211399000000004/0.529177249, i = 1,natom)
   end if
 
   CALL openfile(tagfile,'replace')
