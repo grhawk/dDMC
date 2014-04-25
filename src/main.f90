@@ -25,8 +25,8 @@ PROGRAM SCC_Disp
   USE parameters, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
 
-  integer(ki) :: natom
-  real(kr) :: E,C6ab,Rab0,Rab,damp,hhrep,dfpr
+  integer(ki) :: natom,n
+  real(kr) :: E,C6ab,Rab0,Rab,damp,hhrep,dfpr,r!,covr_av
 
   type(xyz_coords),pointer :: mol1(:),mol2(:)
 
@@ -34,8 +34,8 @@ PROGRAM SCC_Disp
   real(kr),dimension(:),pointer :: Ni
 
   integer(ki),dimension(:),allocatable:: Zaim
-  real(kr),dimension(:),allocatable :: C6aim,C6free
-  real(kr),dimension(:),allocatable :: polar,rvdw,basym_ii
+  real(kr),dimension(:),allocatable :: C6aim,C6free,Nz
+  real(kr),dimension(:),allocatable :: polar,rvdw,basym_ii,covr
   real(kr),dimension(:,:),allocatable :: grad
 
   integer(ki) :: i,j
@@ -92,18 +92,47 @@ PROGRAM SCC_Disp
   
 
   ! => Initialize arrays
-  allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom),grad(natom,3))
+  allocate(C6aim(natom),C6free(natom),Zaim(natom),Nz(natom),polar(natom),rvdw(natom),covr(natom),basym_ii(natom),grad(natom,3))
   do i = 1,natom                                                                         ! Some useful arrays:
      Zaim(i) = atomdata(findatom(coords(i)%atom_type))%Z                                 ! - Z_i of atoms in xyz file
      C6free(i) = atomdata(findatom(coords(i)%atom_type))%D3C6                            ! - C6free by 3D for "   "
      polar(i) = atomdata(findatom(coords(i)%atom_type))%polarizability / BohrAngst**3    ! - polar for        "   "
      rvdw(i) = atomdata(findatom(coords(i)%atom_type))%vdWr / BohrAngst                  ! - Bondi radii
+     covr(i) = atomdata(findatom(coords(i)%atom_type))%covr / BohrAngst                  ! - Covalent radii
      basym_ii(i) = basym(polar(i),Ni(i),Zaim(i))                                         ! - bii of the damping function for atom i (it has to be multiplied by b0).
   end do
 
   ! => C6AIM
-  C6aim(:) = (Ni(:) / dble(Zaim(:)))**2 * C6free(:)                  ! D3
+!  C6aim(:) = (Ni(:) / dble(Zaim(:)))**2 * C6free(:)                  ! oldWay
+!  print*, C6aim
+!  print*, (Ni(:)/dble(Zaim(:)))**2
+
+  Nz(:) = Ni(:) / dble(Zaim(:))
+  C6aim = 0.0d0
+  ! Loop over all atom couples:
+  atom1C6: do i = 1,natom
+     r = 0.0d0
+     n = 0
+     atom2C6: do j = 1,natom
+        Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
+        if( Rab <= (covr(i)+covr(j))*1.1 .and. i /= j )then
+!           print*, covr(i),covr(j),Rab,(covr(i)+covr(j)),coords(i)%atom_type,coords(j)%atom_type !Distance Check
+           r = r + Nz(i)/(Nz(i)+Nz(j)) * Rab * covr(i) / (covr(i)+covr(j))
+           n = n + 1
+!           print*, n,Nz(i),Nz(j),r,Rab* covr(i)/(covr(i)+covr(j)),covr(i),covr(j),(covr(i)+covr(j)),coords(j)%atom_type
+        end if
+     end do atom2C6
+     if( n > 0 )then
+        r = r / dble(n)
+     else
+        r = covr(i)
+     end if
+     C6aim(i) = Nz(i)**2 * 2*r/covr(i) * C6free(i)
+!     print*, C6aim(i), C6free(i),2*r/covr(i),r,covr(i),Nz(i)**2,Nz(i)**2 * 2*r/covr(i)
+  end do atom1C6
   
+  
+
 
  
   if( debug )then
@@ -298,6 +327,11 @@ CONTAINS
     
   END SUBROUTINE die
 
+  real(kr) FUNCTION svol(r)
+    IMPLICIT NONE
+    real(kr),intent(IN) :: r
+    svol = 3.1415 * 4 / 3 * r**3
+  END FUNCTION svol
 
 END PROGRAM SCC_Disp
 
