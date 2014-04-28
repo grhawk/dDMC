@@ -127,7 +127,7 @@ PROGRAM SCC_Disp
      else
         r = covr(i)
      end if
-     C6aim(i) = Nz(i)**2 * 2*r/covr(i) * C6free(i)
+     C6aim(i) =  2*r/covr(i) * C6free(i)
 !     print*, C6aim(i), C6free(i),2*r/covr(i),r,covr(i),Nz(i)**2,Nz(i)**2 * 2*r/covr(i)
   end do atom1C6
   
