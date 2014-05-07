@@ -1,20 +1,11 @@
 # COmmento: La prossima e' una linea vuota
 
-tag = results.tag
-geometry = F2_AP_asym_05.xyz
+tag = ISO34-E19_gfcharge.dat
+geometry = ISO34-E19.xyz
 atomdata = atomdata.data
-#b0 = 1.0
-#A = 0.0
-
-# df:
-# TT - Tang and Tonnies with not fixed b
-# TTf - Tang and Toennies: b is fixed at b0 value
-# Gr - 5 in Materials Transaction Vol. 50 pp 1664
-# GrTT - Used by stephan in JCTC 5,2950 (2009)
-# UDF - Universal damping function  
-# NoDF - Avoid to use a damping function
-#df = TTf
 # To write the chage of the atoms in a file set UP
 debugflag = UP
-#debugflag = down
-dftype = 1
+readparamsflag = UP
+dftype = 3
+tagtype = column
+# column | dftbp
