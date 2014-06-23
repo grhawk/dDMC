@@ -107,9 +107,9 @@ CONTAINS
 
     select case (dftype)
     case (1)
-       STOP 'Gradient is not implemented'
+       call die('Gradient is not implemented')
     case(2)
-       STOP 'Gradient is not implemented'
+       call die('Gradient is not implemented')
     case(3)
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
             & df_functions(dftype)%parameters(1)*basymj)
@@ -306,17 +306,6 @@ CONTAINS
     
   END FUNCTION bmix
 
-
-
-
-  SUBROUTINE die(msg)
-    IMPLICIT NONE
-    character(*),intent(IN) :: msg
-    
-    write(0,*) msg
-    stop
-    
-  END SUBROUTINE die
 
 
   SUBROUTINE printDf()

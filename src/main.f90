@@ -87,8 +87,9 @@ PROGRAM SCC_Disp
 !     print*, 'TEST1'
   end select
   
-  
-  if( Ni_size /= natom ) stop 'ERROR: check 1' ! Controls
+  print*, npop,natom
+!  if( Ni_size /= natom ) stop 9 !'ERROR: check 1' ! Controls
+  if( Ni_size /= natom ) call die('ERROR: check 1') ! Controls
   
 
   ! => Initialize arrays
@@ -288,16 +289,6 @@ CONTAINS
   END FUNCTION cubsum
 
     
-
-  SUBROUTINE die(msg)
-    IMPLICIT NONE
-    character(*),intent(IN) :: msg
-    
-    write(0,*) msg
-    stop
-    
-  END SUBROUTINE die
-
 
 END PROGRAM SCC_Disp
 

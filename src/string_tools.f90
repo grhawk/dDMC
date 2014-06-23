@@ -183,16 +183,16 @@ CONTAINS
     select case (type)
     case ('exceeds_words')
        write(0,9001) module_name,maxwords
-       stop
+       call die('')
     case ('exceeds_chars')
        write(0,9002) module_name,maxchars
-       stop
+       call die('')
     case ('occurrences_out_of_string')
        write(0,9003) module_name,strlen
-       stop
+       call die('')
     case default
        write(0,9000) module_name
-       stop
+       call die('')
     end select
     
     ! Error Expression

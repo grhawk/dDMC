@@ -22,10 +22,12 @@ CONTAINS
     read(fiit(file),*,iostat = err) npop
     allocate(pop(npop))
     
+    print*, 'asd',npop
+
     countline: do i = 1,npop
        read(fiit(file),*,iostat = err) pop(i)
-       if( err < 0 ) stop 'ERROR: some charge in missing'
-       if( err > 0 ) stop 'ERROR: while reading charge file'
+       if( err < 0 ) call die('ERROR: some charge in missing')
+       if( err > 0 ) call die('ERROR: while reading charge file')
     end do countline
     call closefile(file)
     
@@ -43,9 +45,9 @@ CONTAINS
 !!$    call closefile(file)
 
 !    print*, npop
-    do i =1,npop
+!    do i =1,npop
 !       print*, pop(i)
-    end do
+!    end do
   END SUBROUTINE read_charge_gf
   
 END MODULE read_gf

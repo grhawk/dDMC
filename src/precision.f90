@@ -10,4 +10,15 @@ MODULE precision
   ! generic kinds
   integer, parameter :: ki=ki4,kr=kr8,kc=kc8,kch=64
   
+
+CONTAINS
+  SUBROUTINE die(msg)
+    IMPLICIT NONE
+    character(*),intent(IN) :: msg
+    
+    write(0,*) msg
+    stop 1
+    
+  END SUBROUTINE die
+
 END MODULE precision

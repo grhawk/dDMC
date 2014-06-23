@@ -45,7 +45,7 @@ CONTAINS
     ! This loop looks for the property (name) into the tag file
     doread:do
        read(iu,'(A20,A20)',iostat=err) junk, form
-       if (err /= 0) stop 'Property not found'
+       if (err /= 0) call die('Property not found')
 !       print*, '#',fiit(iu),'#  ','  #',name,'#  ', '  #',junk,'#   ', '  #',form,'#' ! debug
        if ( junk .eq. name) then
           form = trim(adjustl(form))

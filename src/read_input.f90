@@ -29,7 +29,7 @@ CONTAINS
     readfile: do
        read(5,'(A64)',iostat=err) junk
 !       print*, junk  ! debug
-       if( err > 0 ) stop 'ERROR: while reading stdout'
+       if( err > 0 ) call die('ERROR: while reading stdout')
        if( err < 0 ) exit
        nl = nl + 1
        
@@ -37,7 +37,7 @@ CONTAINS
           
           call shrink_string(junk,'=',nojunk,nstring)
 !          write(0,* ) junk,nojunk,nstring ! debug
-          if( nstring /= 2 ) stop 'ERROR: checkpoint 1 in read_input'
+          if( nstring /= 2 ) call die('ERROR: checkpoint 1 in read_input')
           
           select case (trim(adjustl(nojunk(1))))
           case ('tag') 
@@ -74,7 +74,7 @@ CONTAINS
        end if
     end do readfile
     
-!    if( ninput /= 6 .and. .not. dfprint ) stop 'ERROR: wrong parameters in input'
+!    if( ninput /= 6 .and. .not. dfprint ) call die('ERROR: wrong parameters in input')
     
 !    call starting_program_announce
     

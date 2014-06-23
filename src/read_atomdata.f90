@@ -45,7 +45,7 @@ CONTAINS
        do
           read(fiit(file),*,iostat=err) junk
           if( err < 0 ) exit
-          if( err > 0 ) stop 'ERROR reading file (get_atomdata 1)'
+          if( err > 0 ) call die('ERROR reading file (get_atomdata 1)')
           if( junk(1:1) /= '#' ) natom = natom + 1
           nl = nl + 1
        end do
@@ -66,7 +66,7 @@ CONTAINS
                   atomdata(natom)%atom_type, atomdata(natom)%polarizability, &
                   atomdata(natom)%TSC6, atomdata(natom)%D3C6
              !          print*, atomdata(i)%Z  ! debug
-             if( err /= 0 ) stop 'ERROR reading file (get_atomdata 2)'
+             if( err /= 0 ) call die('ERROR reading file (get_atomdata 2)')
              !          print*, 'asd ', i   ! debug
           end if
        end do

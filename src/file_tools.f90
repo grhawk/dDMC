@@ -53,7 +53,7 @@ CONTAINS
           getunit = file_unit(i)%unit
           exit doloop
        end if
-       if( i == maxfile ) stop 'ERROR: File not found in getunit'
+       if( i == maxfile ) call die('ERROR: File not found in getunit')
     end do doloop
     
   END FUNCTION getunit
@@ -74,7 +74,7 @@ CONTAINS
     case('ciccio.brutto')
        ! Personal options for that filename
     case default
-       if( .not. present(readwrite)) stop 'ERROR: You have to specify if the file is writable or not'
+       if( .not. present(readwrite)) call die('ERROR: You have to specify if the file is writable or not')
        if( readwrite == 'write' ) OPEN(iu,file=file_name,action='READWRITE',form='FORMATTED',status='NEW',IOSTAT=err)
        if( readwrite == 'read' ) OPEN(iu,file=file_name,action='READ',form='FORMATTED',STATUS='OLD',IOSTAT=err)
        if( readwrite == 'replace' ) OPEN(iu,file=file_name,action='WRITE',form='FORMATTED',STATUS='REPLACE',IOSTAT=err)
@@ -137,11 +137,11 @@ CONTAINS
 
 
 
-    if( .not. present(unit) .and. .not. present(file) ) stop 'ERROR in refreshing file_unit'
+    if( .not. present(unit) .and. .not. present(file) ) call die('ERROR in refreshing file_unit')
     if( .not.  create .and. present(file) )  unit = fiit(file)
 
     if( .not. create) then
-       if(file_unit(unit - initial_value)%file == '' ) stop 'ERROR: File not found'
+       if(file_unit(unit - initial_value)%file == '' ) call die('ERROR: File not found')
        file_unit(unit - initial_value)%file = ''
        opened_files = opened_files - 1
     else
@@ -152,7 +152,7 @@ CONTAINS
              opened_files = opened_files + 1
              exit doloop
           end if
-          if( i == maxfile) STOP 'too much opened files'
+          if( i == maxfile) call die('too much opened files')
        end do doloop
     end if
     
@@ -171,7 +171,7 @@ CONTAINS
        
     case('opening')
        write(0,10100) parameters
-       stop
+       call die('')
 
     end select
 
