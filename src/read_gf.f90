@@ -22,7 +22,7 @@ CONTAINS
     read(fiit(file),*,iostat = err) npop
     allocate(pop(npop))
     
-    print*, 'asd',npop          ! I don't understand why nothing is printed out
+!    print*, 'asd',npop          ! I don't understand why nothing is printed out
 
     countline: do i = 1,npop
        read(fiit(file),*,iostat = err) pop(i)

@@ -89,7 +89,6 @@ PROGRAM SCC_Disp
 !     print*, 'TEST1'
   end select
   
-  print*, npop,natom
 !  if( Ni_size /= natom ) stop 9 !'ERROR: check 1' ! Controls
   if( Ni_size /= natom ) call die('ERROR: check 1') ! Controls
   
@@ -236,8 +235,10 @@ PROGRAM SCC_Disp
      call closefile(fiit(c6last))
   end if
 
-  write(*,'(f20.12)') E*HartKcalMol
+  write(*,'("Energy:  " f20.12 "    kcal/mol")') E*HartKcalMol
   if (readgradflag == 'UP') then 
+     write(*,'("Forces:")')
+     write(*,'("Atom    x     y    z")')
      write(*,'(A3, 3g20.12)') (coords(i)%atom_type,grad(i,:)*27.211399000000004/0.529177249, i = 1,natom)
   end if
 
