@@ -57,8 +57,10 @@ PROGRAM SCC_Disp
   character(kch),parameter :: tagfile = 'dDMC.tag'
 !  integer(ki) :: dftype
 
+  ! Read the input
   call read_stdin
 
+  ! Initialize some stuff
   if( debugflag == 'UP' ) debug=.true.
   if( readparamsflag == 'UP' ) read_param_from_file=.true.
   CALL initialize_dfmodule()
@@ -151,7 +153,6 @@ PROGRAM SCC_Disp
 
 
   E = 0.0d0
-  grad(:,:) = 0.d0
   atom1: do i = 1,natom
      Hi = IsHAtom(i) ! To use hhrep
      atom2: do j = i+1,natom
@@ -162,11 +163,6 @@ PROGRAM SCC_Disp
 !        Rab0 = cubsum(rvdw(i),rvdw(j))
         Rab0 = rvdw(i)+rvdw(j)
         damp =  df(basym_ii(i),basym_ii(j),Rab,Rab0)
-        dfpr = dfp(basym_ii(i),basym_ii(j),Rab,Rab0)
-
-!        write(77,*) damp
-!        damp = 1.d0
-
         
         ! => Mixing C6aim (REL. A)
         C6ab = 2 * C6aim(i) * C6aim(j) / ( C6aim(i) + C6aim(j) )
@@ -174,15 +170,9 @@ PROGRAM SCC_Disp
         
         E =  E - damp * C6ab / Rab**6   ! Dispersion Energy
         
-        dfpr = dfp(basym_ii(i),basym_ii(j),Rab,Rab0)
-        grad(i,:) = grad(i,:) - dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab
-           
         if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
              & damp, C6aim(i), C6aim(j), C6ab, -damp * C6ab / Rab**6, E
-        if( debug ) write(fiit(graddbg),'(2A3,2X,7(X,F15.5))') &
-             & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
-             & dfpr, C6ab, grad(i,1), grad(i,2), grad(i,3)
         if( debug ) write(fiit(excelfile),'(2A3,2X,20(X,F15.5))')&
              & coords(i)%atom_type, coords(j)%atom_type, Rab, rvdw(i)&
              &, rvdw(j), Rab0, polar(i), polar(j), C6free(i),&
@@ -195,7 +185,7 @@ PROGRAM SCC_Disp
         
         if( Hi .and. Hj ) then
 !           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
-!           hhrep = hcor(Rab)
+!           hhrep = hcor(Rab) ! debug
            hhrep = 0d0
            E = E + hhrep  ! HH-repulsion correction
         end if
@@ -205,26 +195,31 @@ PROGRAM SCC_Disp
   end do atom1
 
 
-  grad(:,:) = 0.d0
-  do i = 1,natom
-     do j = 1,natom
-        if (j /= i) then
-           Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
-           Rab0 = rvdw(i)+rvdw(j)
-           dfpr = dfp(basym_ii(i),basym_ii(j),Rab,Rab0)
-           C6ab = 2 * C6aim(i) * C6aim(j) / ( C6aim(i) + C6aim(j) )
-           grad(i,:) = grad(i,:) - (dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab)
-           ! print*, i,j
-           ! print*, 'dfpr ',dfpr
-           ! print*, 'xyz - xyz ',coords(i)%coord - coords(j)%coord
-           ! print*, 'C6ab ',C6ab
-           ! print*, 'Rab ',Rab
-           ! print*, 'grad ',grad(i,:)
-        end if
+  if (readgradflag == 'UP') then 
+     grad(:,:) = 0.d0
+     do i = 1,natom
+        do j = 1,natom
+           if (j /= i) then
+              Rab = dist(coords(i)%coord,coords(j)%coord)/BohrAngst
+              Rab0 = rvdw(i)+rvdw(j)
+              dfpr = dfp(basym_ii(i),basym_ii(j),Rab,Rab0)
+              C6ab = 2 * C6aim(i) * C6aim(j) / ( C6aim(i) + C6aim(j) )
+              grad(i,:) = grad(i,:) - (dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab)
+              ! if( debug ) write(fiit(graddbg),'(2A3,2X,7(X,F15.5))') &
+              !      & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
+              !      & dfpr, C6ab, grad(i,1), grad(i,2), grad(i,3)
+              ! print*, i,j
+              ! print*, 'dfpr ',dfpr
+              ! print*, 'xyz - xyz ',coords(i)%coord - coords(j)%coord
+              ! print*, 'C6ab ',C6ab
+              ! print*, 'Rab ',Rab
+              ! print*, 'grad ',grad(i,:)
+           end if
+        end do
      end do
-  end do
-
-!  grad(:,:) = grad(:,:)/2
+  end if
+  
+  !  grad(:,:) = grad(:,:)/2
 
   if( debug ) call closefile(energydbg)
   if( debug ) call closefile(distances)
