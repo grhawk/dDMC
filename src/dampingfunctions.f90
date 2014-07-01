@@ -80,6 +80,14 @@ CONTAINS
     df_functions(type)%parameters = (/ 2.18206081886510, 1.12451132211179, 34.9266956797606 /)
 !                                          b0                   a               s
 
+    type = 4
+    df_functions(type)%index = 4
+    df_functions(type)%name  = 'TT(bijR)*Fd(bijR)_scaled'
+    df_functions(type)%n_par = 4
+    allocate(df_functions(type)%parameters(df_functions(type)%n_par))
+    df_functions(type)%parameters = (/ 2.18206081886510, 1.12451132211179, 34.9266956797606, 1.0000 /)
+!                                          b0                   a               s              sf
+
   END SUBROUTINE df_creation
 
 
@@ -109,6 +117,8 @@ CONTAINS
     case (1)
        call die('Gradient is not implemented')
     case(2)
+       call die('Gradient is not implemented')
+    case(4)
        call die('Gradient is not implemented')
     case(3)
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
@@ -233,6 +243,25 @@ CONTAINS
             & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
        
        df = TT*Fd
+
+    case (4)
+       !Fd*TTdf_scaled
+       
+       bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
+            & df_functions(dftype)%parameters(1)*basymj)
+!       x = bij*R
+       x = R
+!            0.5*(1+tanh(23.0*(x/6.5-1)))       
+       Fd = 0.5*( 1.d0 + tanh( df_functions(dftype)%parameters(3) * &
+            & ( x / ( df_functions(dftype)%parameters(2) * R0 ) - 1.d0 ) ) )
+
+       bx = bij * R
+       
+       TT = 1.d0 - &
+            & ( exp( -bx ) * (1.d0 + bx + (bx)**2.d0/2.d0 + (bx)**3.d0/6.d0 + &
+            & (bx)**4.d0/24.d0 + (bx)**5.d0/120.d0 + (bx)**6.d0/720.d0) )
+       
+       df = df_functions(dftype)%parameters(4)*TT*Fd
        
 ! !       if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
 
