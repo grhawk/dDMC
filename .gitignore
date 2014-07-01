@@ -1,3 +1,9 @@
+gradient_derivation/2H2O.xyz
+gradient_derivation/dDMC*
+gradient_derivation/ddmc.in
 src/dDMC2
+
+
 *.o
 *.mod
+*~

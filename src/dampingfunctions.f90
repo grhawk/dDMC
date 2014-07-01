@@ -18,7 +18,7 @@ MODULE dampingfunctions
 !  integer(ki) :: dftype
 
 ! PRIVATE
-  integer(ki),parameter :: df_num = 3 ! number of available damping function
+  integer(ki),parameter :: df_num = 4 ! number of available damping function
   logical :: debug = .false.
   type(df_function) :: df_functions(0:df_num)
   
@@ -85,7 +85,7 @@ CONTAINS
     df_functions(type)%name  = 'TT(bijR)*Fd(bijR)_scaled'
     df_functions(type)%n_par = 4
     allocate(df_functions(type)%parameters(df_functions(type)%n_par))
-    df_functions(type)%parameters = (/ 2.18206081886510, 1.12451132211179, 34.9266956797606, 1.0000 /)
+    df_functions(type)%parameters = (/ 2.18206081886510, 1.12451132211179, 34.9266956797606, 1.000 /)
 !                                          b0                   a               s              sf
 
   END SUBROUTINE df_creation
@@ -117,8 +117,6 @@ CONTAINS
     case (1)
        call die('Gradient is not implemented')
     case(2)
-       call die('Gradient is not implemented')
-    case(4)
        call die('Gradient is not implemented')
     case(3)
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
@@ -168,8 +166,58 @@ CONTAINS
             & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
             & 720.0*df_functions(dftype)%parameters(3)*R)*exp(-bij*R)/(R0*df_functions(dftype)%parameters(2)*R**7)
 
+    case(4)
+       bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
+            & df_functions(dftype)%parameters(1)*basymj)
+       
+       dfp = -df_functions(dftype)%parameters(4)* &
+            & 0.000694444444444444*(1.0*tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) + 1.0)* &
+            & (1.0*R0*df_functions(dftype)%parameters(2)*bij**7*R**7 + &
+            & 6.0*R0*df_functions(dftype)%parameters(2)*bij**6*R**6 + &
+            & 36.0*R0*df_functions(dftype)%parameters(2)*bij**5*R**5 + &
+            & 180.0*R0*df_functions(dftype)%parameters(2)*bij**4*R**4 + &
+            & 720.0*R0*df_functions(dftype)%parameters(2)*bij**3*R**3 + &
+            & 2160.0*R0*df_functions(dftype)%parameters(2)*bij**2*R**2 + &
+            & 4320.0*R0*df_functions(dftype)%parameters(2)*bij*R - &
+            & 4320.0*R0*df_functions(dftype)%parameters(2)*exp(bij*R) + &
+            & 4320.0*R0*df_functions(dftype)%parameters(2) + &
+            & 1.0*bij**6*df_functions(dftype)%parameters(3)*R**7* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 1.0*bij**6*df_functions(dftype)%parameters(3)*R**7 + &
+            & 6.0*bij**5*df_functions(dftype)%parameters(3)*R**6* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 6.0*bij**5*df_functions(dftype)%parameters(3)*R**6 + &
+            & 30.0*bij**4*df_functions(dftype)%parameters(3)*R**5* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 30.0*bij**4*df_functions(dftype)%parameters(3)*R**5 + &
+            & 120.0*bij**3*df_functions(dftype)%parameters(3)*R**4* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 120.0*bij**3*df_functions(dftype)%parameters(3)*R**4 + &
+            & 360.0*bij**2*df_functions(dftype)%parameters(3)*R**3* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 360.0*bij**2*df_functions(dftype)%parameters(3)*R**3 + &
+            & 720.0*bij*df_functions(dftype)%parameters(3)*R**2* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 720.0*bij*df_functions(dftype)%parameters(3)*R**2 - &
+            & 720.0*df_functions(dftype)%parameters(3)*R*exp(bij*R)* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) + &
+            & 720.0*df_functions(dftype)%parameters(3)*R*exp(bij*R) + &
+            & 720.0*df_functions(dftype)%parameters(3)*R* &
+            & tanh(-df_functions(dftype)%parameters(3) + &
+            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+            & 720.0*df_functions(dftype)%parameters(3)*R)*exp(-bij*R)/(R0*df_functions(dftype)%parameters(2)*R**7)
+
     case DEFAULT
        dfp = 1E10
+       call die('dftype does not exits - gradient')
        
     end select
 
@@ -270,7 +318,7 @@ CONTAINS
 !        !      &,Fd,TT,df, type
        
     case DEFAULT
-       call DIE('dftype does not exits')
+       call die('dftype does not exits - energy')
        
     end select
 

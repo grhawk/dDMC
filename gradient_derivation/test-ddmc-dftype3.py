@@ -94,7 +94,7 @@ test = read('S668-24BenzeneBenzenepipi-090.xyz')
 #test = Atoms('2Ar', position=[(0.,0.,0.),(0.,0.,3.)])
 
     
-test.set_calculator(dDMC(label='2H2O',atoms=test,dftype='3',tagtype='column'))
+test.set_calculator(dDMC(label='S668-24BenzeneBenzenepipi-090',atoms=test,dftype='3',tagtype='column'))
 
 print test.get_potential_energy()
 numer =  numeric_forces(test, indices=None, axes=(0, 1, 2), d=0.001,
@@ -102,8 +102,13 @@ numer =  numeric_forces(test, indices=None, axes=(0, 1, 2), d=0.001,
 
 anal = test.get_forces()
 
+print 'Numerical Gradient: '
 print numer
+print
+print 'Analitical Gradient: '
 print anal
+print
+print 'Numerical/Analytical:'
 print numer/anal
 
 
