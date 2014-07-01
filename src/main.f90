@@ -89,8 +89,7 @@ PROGRAM SCC_Disp
 !     print*, 'TEST1'
   end select
   
-!  if( Ni_size /= natom ) stop 9 !'ERROR: check 1' ! Controls
-  if( Ni_size /= natom ) call die('ERROR: check 1') ! Controls
+  if( Ni_size /= natom ) call die('ERROR: Number of charge is different from the number of atoms!') ! Controls
   
 
   ! => Initialize arrays
