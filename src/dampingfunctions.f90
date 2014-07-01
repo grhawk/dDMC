@@ -241,7 +241,7 @@ CONTAINS
 !        !      &,Fd,TT,df, type
        
     case DEFAULT
-       df = 1E10
+       call DIE('dftype does not exits')
        
     end select
 
