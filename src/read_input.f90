@@ -16,7 +16,7 @@ MODULE read_input
 
   PRIVATE
   PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag,dftype,dfprint,readparamsflag,tagtype,readgradflag
-  PUBLIC :: read_stdin
+  PUBLIC :: read_stdin, starting_program_announce
   
 CONTAINS
   

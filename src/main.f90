@@ -66,6 +66,8 @@ PROGRAM SCC_Disp
   CALL initialize_dfmodule()
   if( dfprint ) CALL printDf()
 
+  ! Print announce if debug is up
+  if( debug ) call starting_program_announce
 
   ! Retrieve data from atomdata.data
   call get_atomdata(atomdatafile) ! Now I can use the atomdata array
@@ -89,6 +91,10 @@ PROGRAM SCC_Disp
 !     print*, 'TEST1'
   end select
   
+  if( debug )then 
+     write(0,*) 'Ni_size: ',Ni_size 
+     write(0,*) 'natom: ',natom 
+  end if
   if( Ni_size /= natom ) call die('ERROR: Number of charge is different from the number of atoms!') ! Controls
   
 
