@@ -16,6 +16,7 @@ df = fd*tt*x**(-6)*-1
 dfp = diff(df,x)
 dfp2 = diff(df,x,2)
 
+print(latex(factor(dfp)))
 print factor(dfp)
 
 # fdp = diff(fd,t)

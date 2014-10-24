@@ -90,7 +90,7 @@ def numeric_forces(atoms, indices=None, axes=(0, 1, 2), d=0.001,
 
 #test = Atoms('2N',positions=[(0.,0.,0.),(0.,0.,4.10)])
 #test = molecule('C2H2')
-test = read('S668-24BenzeneBenzenepipi-090.xyz')
+test = sys.argv[1]
 #test = Atoms('2Ar', position=[(0.,0.,0.),(0.,0.,3.)])
 
     
