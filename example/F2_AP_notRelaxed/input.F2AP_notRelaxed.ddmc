@@ -1,12 +1,38 @@
-# COmmento: La prossima e' una linea vuota
+# dDMC input v1.0
+# Consider to read DOI: 10.1002/qua.24887
 
-tag = results.tag
+# XYZ file for the geometry you want to use
 geometry = F2AP_notRelaxed.xyz
-atomdata = atomdata.data
-# To write the chage of the atoms in a file set UP
-debugflag = UP
-readparamsflag = UP
-gradient = UP
-dftype = 3
+
+# The next entry set how the charges are read:
+# * column -> the tag keyword expects a file containing all  
+#	      the charges in one column ordered as the atoms 
+#  	      in the xyz file (useful with Gaussian)
+# * dftbp  -> the tag keyword expects the results.tag file from
+#             the dftb+ software
 tagtype = dftbp
-# column | dftbp
+tag = results.tag
+
+# The parameters are strongly dependent on the used method.
+# Select if you want to apply the correction to PM6 or dftb
+# (case matters)
+method = dftb
+
+# Do you want the gradient? (UP = yes, DOWN = no)
+gradient = UP
+
+# If you want to debug... or to test
+#debugflag = UP
+
+# !! WARNING !! 
+# The following keyword are critical: use it only if you know
+# what you are doing!
+
+# Select a file to read the atom data
+# atomdata = atomdata.data
+
+# Select a different damping function
+# dftype = 3
+
+# Read the df parameters from a file
+# dfparameters = parameters.dat
