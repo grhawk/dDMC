@@ -1,4 +1,4 @@
-# INPUT file for dDMC v1.0
+# dDMC input v1.0
 # Consider to read DOI: 10.1002/qua.24887
 
 # XYZ file for the geometry you want to use
@@ -11,12 +11,28 @@ geometry = F2AP.xyz
 # * dftbp  -> the tag keyword expects the results.tag file from
 #             the dftb+ software
 tagtype = dftbp
-tag = results.tag 
+tag = results.tag
 
-# To modify the default behaviour of the program
-debugflag = UP
+# The parameters are strongly dependent on the used method.
+# Select if you want to apply the correction to PM6 or dftb
+# (case matters)
+method = dftb
 
-!! USE CAREFULLY !!
-readparamsflag = UP
-dftype = 3
-atomdata = atomdata.dat
+# Do you want the gradient? (UP = yes, DOWN = no)
+gradient = DOWN
+
+# If you want to debug... or to test
+#debugflag = UP
+
+# !! WARNING !! 
+# The following keyword are critical: use it only if you know
+# what you are doing!
+
+# Select a file to read the atom data
+# atomdata = atomdata.data
+
+# Select a different damping function
+# dftype = 3
+
+# Read the df parameters from a file
+# dfparameters = parameters.dat
