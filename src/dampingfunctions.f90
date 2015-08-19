@@ -225,11 +225,13 @@ CONTAINS
 
 
 
-  real(kr) FUNCTION  df(basymi,basymj,R,R0)
+  real(kr) FUNCTION  df(at1,at2,basymi,basymj,R,R0,dbgfile)
     IMPLICIT NONE
     real(kr),intent(IN) :: basymi,basymj,R,R0
     real(kr) :: TT,Fd,bij,x,bx
     integer(ki) :: k
+    character(*),intent(IN),optional :: dbgfile
+    character(*),intent(IN) :: at1, at2
 
     select case (dftype)
     case (1)
@@ -271,7 +273,7 @@ CONTAINS
        
        df = TT
        
-!       if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
+      ! if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
 
     case (3)      !------------------> THE USED ONE!!!!
        !Fd*TTdf  
@@ -311,20 +313,23 @@ CONTAINS
        
        df = df_functions(dftype)%parameters(4)*TT*Fd
        
-! !       if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
+      ! if(debug)write(fiit(dampingfunc),*) 'DF Type: ',type
 
-!        ! if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
-!        !      &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
-!        !      &,Fd,TT,df, type
+      !  if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
+      !       &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
+      !       &,Fd,TT,df, type
        
     case DEFAULT
        call die('dftype does not exits - energy')
        
     end select
 
-    ! if(debug)write(fiit(dampingfunc),'(2A3,11F15.8)')coords(i)&
-    !      &%atom_type,coords(j)%atom_type,R0,R,b0,a,s,basymi,basymj,bij&
-    !      &,Fd,TT,df,type
+    if( present(dbgfile) )then
+      !print*, 'DENTRO DBGFILE'
+      write(fiit(dbgfile),'(2A3,11F15.8)') at1, at2,R0,R,df_functions(dftype)%parameters(1),&
+           & df_functions(dftype)%parameters(2),df_functions(dftype)%parameters(3),basymi,basymj,bij,&
+           &Fd,TT,df
+    end if
     
     
 !    TT = 1.d0 - &
@@ -414,7 +419,7 @@ CONTAINS
     d = start_d
     do j = 1,np
        do dftype = 1,df_num
-          df_value(dftype) = df(0.5d0,0.5d0,d,6.4d0)
+          df_value(dftype) = df('i','i',0.5d0,0.5d0,d,6.4d0)
 !          write(*,*) df(0.5d0,0.5d0,d,1.9d0)
        end do
        write(format_string,*) df_num+2

@@ -148,7 +148,7 @@ PROGRAM SCC_Disp
   if( debug ) call openfile(distances,'replace')
   if( debug ) write(fiit(distances),*) '# AT_TP(i)    AT_TP(j)    xi   yi   zi   xj   yj    zj Rab'
   if( debug ) call openfile(dampingfunc,'replace')
-  if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j   R0  R  b0  a  s  basymi  basymj   bij  Fd   TT   dfR0  dftype'
+  if( debug ) write(fiit(dampingfunc),*) '#ATOM_TYPE_i ATOM_TYPE_j   R0  R  b0  a  s  basymi  basymj   bij  Fd   TT   df'
   if( debug ) call openfile(excelfile,'replace')
   if( debug ) write(fiit(excelfile),*) '#AT_TP(i)  AT_TP(j) Rab  Rvdw(&
        &i) Rvdw(j)  Rab0  alpha(i)  alpha(j)  C6free(i)  C6free(j)  Za&
@@ -166,7 +166,11 @@ PROGRAM SCC_Disp
         
 !        Rab0 = cubsum(rvdw(i),rvdw(j))
         Rab0 = rvdw(i)+rvdw(j)
-        damp =  df(basym_ii(i),basym_ii(j),Rab,Rab0)
+        if(debug) then
+          damp =  df(coords(i)%atom_type,coords(j)%atom_type,basym_ii(i),basym_ii(j),Rab,Rab0,dampingfunc)
+        else
+          damp =  df(coords(i)%atom_type,coords(j)%atom_type,basym_ii(i),basym_ii(j),Rab,Rab0)
+        end if
         
         ! => Mixing C6aim (REL. A)
         C6ab = 2 * C6aim(i) * C6aim(j) / ( C6aim(i) + C6aim(j) )
@@ -209,9 +213,10 @@ PROGRAM SCC_Disp
               dfpr = dfp(basym_ii(i),basym_ii(j),Rab,Rab0)
               C6ab = 2 * C6aim(i) * C6aim(j) / ( C6aim(i) + C6aim(j) )
               grad(i,:) = grad(i,:) - (dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab)
-              ! if( debug ) write(fiit(graddbg),'(2A3,2X,7(X,F15.5))') &
-              !      & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
-              !      & dfpr, C6ab, grad(i,1), grad(i,2), grad(i,3)
+              if( debug ) write(fiit(graddbg),'(2A3,2X,2I4,9(X,E20.12))') &
+                   & coords(i)%atom_type, coords(j)%atom_type, i, j, Rab, Rab0, rvdw(i), rvdw(j), &
+                   & dfpr, C6ab, dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab
+              write(*,'(2I4,3E30.10)') i,j,grad(i,:)
               ! print*, i,j
               ! print*, 'dfpr ',dfpr
               ! print*, 'xyz - xyz ',coords(i)%coord - coords(j)%coord
@@ -255,7 +260,8 @@ PROGRAM SCC_Disp
      write(fiit(tagfile),'(3E30.20)') (grad(i,j), j=1,3)
   end do
   CALL closefile(tagfile)
-  
+
+  write(0,*) NEW_LINE('C'),'The Programs Ends Correctly!'
 
 CONTAINS
   
