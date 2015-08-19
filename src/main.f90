@@ -10,8 +10,6 @@ PROGRAM SCC_Disp
   ! The program works with atomic units but print 
   ! the final energy in kcal/mol
 
-  ! To check that all is working properly, the dftype = 1 with parameter = 1.5 using 
-  ! the F2_AP_asym_05.xyz, should give as result -7.381707320 Kcal/mol
 
   USE precision
   USE utils
@@ -19,7 +17,7 @@ PROGRAM SCC_Disp
   USE read_xyz
   USE read_atomdata
   USE file_tools
-  USE read_input  ! TODO better
+  USE read_input
   USE dampingfunctions
   USE read_gf
   USE parameters, only : BohrAngst,HartKcalMol
