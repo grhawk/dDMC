@@ -10,12 +10,12 @@ MODULE read_input
   USE precision
   USE string_tools
   IMPLICIT NONE
-  character(kch) :: inputtagfile,inputcoofile,atomdatafile,debugflag,readparamsflag,tagtype,readgradflag
-  integer(ki) :: dftype
+  character(kch) :: inputtagfile,inputcoofile,atomdatafile,debugflag,dfparamsfile,tagtype,readgradflag,method
+  integer(ki) :: dftype = 0
   logical :: dfprint
 
   PRIVATE
-  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag,dftype,dfprint,readparamsflag,tagtype,readgradflag
+  PUBLIC :: inputtagfile,inputcoofile,atomdatafile,debugflag,dftype,dfprint,dfparamsfile,tagtype,readgradflag,method
   PUBLIC :: read_stdin, starting_program_announce
   
 CONTAINS
@@ -49,11 +49,14 @@ CONTAINS
           case ('atomdata')
              atomdatafile = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
+          case ('method')
+             method = trim(adjustl(nojunk(2)))
+             ninput = ninput + 1
           case ('debugflag')
              debugflag = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
-          case ('readparamsflag')
-             readparamsflag = trim(adjustl(nojunk(2)))
+          case ('dfparameters')
+             dfparamsfile = trim(adjustl(nojunk(2)))
              ninput = ninput + 1
           case ('dftype')
              dummy = char2int(nojunk(2),1)
@@ -65,10 +68,11 @@ CONTAINS
              readgradflag = trim(adjustl(nojunk(2)))
           case ('dfprint')
              dfprint = .true.
-             readparamsflag = 'DOWN'
+             dfparamsfile = ''
              exit readfile
           case default
-             write(0,*) 'INPUT ERROR IN LINE ',nl
+            write(0,*) 'INPUT ERROR IN LINE ',nl
+            stop 1
           end select
           
        end if
@@ -89,7 +93,7 @@ CONTAINS
     write(0,*) 'atomic data: ', atomdatafile
     write(0,*) 'dftype: ',dftype
     write(0,*) 'tagtype: ',tagtype
-    write(0,*) 'readparamsflag: ',readparamsflag
+    write(0,*) 'dfparameters: ',dfparamsfile
     write(0,*) 'gradient: ',readgradflag
     write(0,*) 'debug: ',debugflag
     

@@ -2,7 +2,7 @@ MODULE dampingfunctions
 
   USE precision
   USE file_tools
-  USE read_input
+!  USE read_input
   USE read_xyz
 
   IMPLICIT NONE
@@ -13,34 +13,53 @@ MODULE dampingfunctions
      real(kr),allocatable :: parameters(:)
   END type df_function
   
-! PUBLIC
-  logical :: read_param_from_file = .false.
-!  integer(ki) :: dftype
-
 ! PRIVATE
+  integer(ki) :: dftype
   integer(ki),parameter :: df_num = 4 ! number of available damping function
   logical :: debug = .false.
   type(df_function) :: df_functions(0:df_num)
+  character(kch) :: filename
   
 
   PRIVATE
-  PUBLIC read_param_from_file, dftype
   PUBLIC initialize_dfmodule,df,printDf,hcor,dfp
 
   
 CONTAINS
   
-  SUBROUTINE initialize_dfmodule()
-    CALL df_creation()
+  SUBROUTINE initialize_dfmodule(dftypein, file, method)
+    integer(ki),intent(IN) :: dftypein
+    character(kch),intent(IN) :: file, method
+
+    dftype = dftypein
+    filename = file
     
-    if ( read_param_from_file ) then
-!       write(*,*) 'dftype -> ',dftype
+    select case (trim(adjustl(method)))
+    case ('PM6')
+      dftype = 4
+    case('dftb')
+      dftype = 3
+    case DEFAULT
+      dftype = 0
+    end select
+
+    if (dftype == 0) then
+      dftype = 3
+    end if
+
+    CALL df_creation()
+
+    if ((len_trim(adjustl(filename)) < 64) .and. (len_trim(adjustl(filename)) > 0)) then
+      write(0,*) 'The parameters are read from file: ',trim(adjustl(file))
+      
        if( dftype > 100 ) then
           dftype = dftype - 100
           CALL read_params(df_functions(0)%n_par,df_functions(0)%parameters)
-       else
-          CALL read_params(df_functions(dftype)%n_par,df_functions(dftype)%parameters)
-       end if
+          write(0,*) 'The function to use the HH repulsive term'
+          write(0,*) 'has not been tested recently and is not parametrized!'
+          write(0,*) 'It would be much safety to use the default parameters!'
+        end if
+        CALL read_params(df_functions(dftype)%n_par,df_functions(dftype)%parameters)
  
     end if
   END SUBROUTINE initialize_dfmodule
@@ -48,7 +67,8 @@ CONTAINS
   SUBROUTINE df_creation()
     IMPLICIT NONE
     integer(ki) :: type
-    
+
+    ! This was used to scale the HH interactions. To use it set the value of damping function + 100!
     type = 0
     df_functions(type)%index = 0
     df_functions(type)%name  = 'HH'
@@ -77,7 +97,7 @@ CONTAINS
     df_functions(type)%name  = 'TT(bijR)*Fd(bijR)'
     df_functions(type)%n_par = 3
     allocate(df_functions(type)%parameters(df_functions(type)%n_par))
-    df_functions(type)%parameters = (/ 2.18206081886510, 1.12451132211179, 34.9266956797606 /)
+    df_functions(type)%parameters = (/ 1.85705835_kr, 1.01824853_kr, 23.0_kr /)
 !                                          b0                   a               s
 
     type = 4
@@ -85,7 +105,7 @@ CONTAINS
     df_functions(type)%name  = 'TT(bijR)*Fd(bijR)_scaled'
     df_functions(type)%n_par = 4
     allocate(df_functions(type)%parameters(df_functions(type)%n_par))
-    df_functions(type)%parameters = (/ 2.18206081886510, 1.12451132211179, 34.9266956797606, 1.000 /)
+    df_functions(type)%parameters = (/ 1.530_kr, 1.042_kr, 23.000_kr, 1.842_kr /)
 !                                          b0                   a               s              sf
 
   END SUBROUTINE df_creation
@@ -237,8 +257,6 @@ CONTAINS
     case (1)
        ! From the first report
 
-!       write(*,*) (df_functions(dftype)%parameters(k), k = 1,df_functions(dftype)%n_par)
-       
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
             &     df_functions(dftype)%parameters(1)*basymj)
        bx = bij*R
@@ -351,13 +369,9 @@ CONTAINS
     real(kr),intent(OUT) :: ppp(:)
     integer(ki),intent(IN) :: n
     integer(ki) :: err,i
-    character(kch),parameter :: filename='parameters.dat'
     character(kch) :: junk
     real(kr) :: tmp
 
-!    allocate(ppp(n))
-
-!    write(*,*) n
     err = 0
     i = 1
     call openfile(filename,'read')

@@ -37,7 +37,7 @@ CONTAINS
     integer(ki) :: natom,err,nl
     integer(ki) :: i
 
-    if( present(file) .and. (len_trim(adjustl(file)) < 64)) then
+    if( present(file) .and. (len_trim(adjustl(file)) < 64) .and. (len_trim(adjustl(file)) > 0)) then
       
       write(0,*) 'The function to read the atomic data from a file'
       write(0,*) 'has not been tested recently!'

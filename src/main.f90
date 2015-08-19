@@ -60,15 +60,14 @@ PROGRAM SCC_Disp
 
   ! Initialize some stuff
   if( debugflag == 'UP' ) debug=.true.
-  if( readparamsflag == 'UP' ) read_param_from_file=.true.
-  CALL initialize_dfmodule()
+  CALL initialize_dfmodule(dftype, dfparamsfile, method)
   if( dfprint ) CALL printDf()
 
   ! Print announce if debug is up
   if( debug ) call starting_program_announce
 
   ! Retrieve data from atomdata.data
-  call get_atomdata(atomdatafile) ! Now I can use the atomdata array
+  call get_atomdata(atomdatafile)
   
   ! Retrive name of atoms
   call get_coords(inputcoofile,natom)
@@ -82,20 +81,15 @@ PROGRAM SCC_Disp
      Ni_size => npop
   case default
      call dftbp_tag()
-!!$     call get_tag_data('atomic_charges',inputtagfile) 
-!!$     Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
-!!$     Ni_size => ifrmt(1)
-!!$     Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
-!     print*, 'TEST1'
   end select
   
   if( debug )then 
      write(0,*) 'Ni_size: ',Ni_size 
      write(0,*) 'natom: ',natom 
   end if
+
   if( Ni_size /= natom ) call die('ERROR: Number of charge is different from the number of atoms!') ! Controls
   
-
   ! => Initialize arrays
   allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom),grad(natom,3))
   do i = 1,natom                                                                         ! Some useful arrays:
@@ -201,6 +195,7 @@ PROGRAM SCC_Disp
   end do atom1
 
 
+  write(*,*) 'ATOM i     ATOM j     Grad'
   if (readgradflag == 'UP') then 
      grad(:,:) = 0.d0
      do i = 1,natom
@@ -215,12 +210,6 @@ PROGRAM SCC_Disp
                    & coords(i)%atom_type, coords(j)%atom_type, i, j, Rab, Rab0, rvdw(i), rvdw(j), &
                    & dfpr, C6ab, dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab
               write(*,'(2I4,3E30.10)') i,j,grad(i,:)
-              ! print*, i,j
-              ! print*, 'dfpr ',dfpr
-              ! print*, 'xyz - xyz ',coords(i)%coord - coords(j)%coord
-              ! print*, 'C6ab ',C6ab
-              ! print*, 'Rab ',Rab
-              ! print*, 'grad ',grad(i,:)
            end if
         end do
      end do
@@ -253,10 +242,12 @@ PROGRAM SCC_Disp
   CALL openfile(tagfile,'replace')
   write(fiit(tagfile),*) 'correction_energy     1'
   write(fiit(tagfile),'(E30.20)') E
-  write(fiit(tagfile),*) 'forces    3,',natom
-  do i = 1,natom
-     write(fiit(tagfile),'(3E30.20)') (grad(i,j), j=1,3)
-  end do
+  if (readgradflag == 'UP') then
+    write(fiit(tagfile),*) 'forces    3,',natom
+    do i = 1,natom
+      write(fiit(tagfile),'(3E30.20)') (grad(i,j), j=1,3)
+    end do
+  end if
   CALL closefile(tagfile)
 
   write(0,*) NEW_LINE('C'),'The Programs Ends Correctly!'
