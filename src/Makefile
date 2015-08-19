@@ -1,4 +1,4 @@
-PROG = dDMC2
+PROG = dDMC2.x
 #FC = ifort
 FC = gfortran
 LIBS = 
