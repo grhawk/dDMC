@@ -1,0 +1,11 @@
+# COmmento: La prossima e' una linea vuota
+
+tag = results.tag
+geometry = water.xyz
+atomdata = atomdata.data
+# To write the chage of the atoms in a file set UP
+debugflag = UP
+readparamsflag = UP
+dftype = 3
+tagtype = dftbp
+# column | dftbp
