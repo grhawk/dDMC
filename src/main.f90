@@ -1,4 +1,4 @@
-PROGRAM dDMCv1
+PROGRAM dDMC
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!                         _ ___  __  __  ___                      !!!
@@ -20,6 +20,8 @@ PROGRAM dDMCv1
 !!! As regression test compare what you obtain in the ddmc.tag      !!!
 !!! file with the ddmc.tag.chk file. A script should be available   !!!
 !!! for that but it is not! ;)                                      !!!
+!!!                                                                 !!!
+!!! Version 1.0                                                     !!!
 !!!                                                                 !!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -296,6 +298,6 @@ CONTAINS
 
     
 
-END PROGRAM DDMCv1
+END PROGRAM dDMC
 
    
