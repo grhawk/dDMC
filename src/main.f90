@@ -1,16 +1,32 @@
-PROGRAM SCC_Disp
+PROGRAM dDMCv1
 
-  ! Damping function:
-  ! from: JCTC: Stephan Steinmann 2009
-  ! (with "b" factor depending on atom couple)
-  ! 
-  ! No Hbond correction
-  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!                         _ ___  __  __  ___                      !!!
+!!!                      __| |   \|  \/  |/ __|                     !!!
+!!!                     / _` | |) | |\/| | (__                      !!!
+!!!                     \__,_|___/|_|  |_|\___|                     !!!
+!!!                                                                 !!!
+!!! Provide a dispersion correction based on Mulliken charges.      !!!
+!!! Read DOI: 10.1002/qua.24887 for details.                        !!!
+!!!                                                                 !!!
+!!! Contact Riccardo for any question about the code or for         !!!
+!!! signaling bugs at riccardo.petraglia@gmail.com                  !!!
+!!!                                                                 !!!
+!!! This code is also available at:                                 !!!
+!!!  * https://github.com/grhawk/dDMC/                              !!!
+!!!                                                                 !!!
+!!! Look the examples for instructions.                             !!!
+!!!                                                                 !!!
+!!! As regression test compare what you obtain in the ddmc.tag      !!!
+!!! file with the ddmc.tag.chk file. A script should be available   !!!
+!!! for that but it is not! ;)                                      !!!
+!!!                                                                 !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
   ! The program works with atomic units but print 
-  ! the final energy in kcal/mol
-
-
+  ! the final energy and forces are in kcal/mol and kcal/mol/ang
+  
   USE precision
   USE utils
   USE read_tag_dftbp
@@ -184,8 +200,6 @@ PROGRAM SCC_Disp
              & coords(i)%coord, coords(j)%coord, Rab
         
         if( Hi .and. Hj ) then
-!           print*, 'Two H   ',coords(i)%atom_type,coords(j)%atom_type ! debug
-!           hhrep = hcor(Rab) ! debug
            hhrep = 0d0
            E = E + hhrep  ! HH-repulsion correction
         end if
@@ -215,8 +229,6 @@ PROGRAM SCC_Disp
      end do
   end if
   
-  !  grad(:,:) = grad(:,:)/2
-
   if( debug ) call closefile(energydbg)
   if( debug ) call closefile(distances)
   if( debug ) call closefile(dampingfunc)
@@ -259,7 +271,7 @@ CONTAINS
     Ni => matrix(:,1,1)    ! WARNING:: If you recall 'get_tag_data' tag matrix change its values
     Ni_size => ifrmt(1)
     do i = 1,natom
-       Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge                    ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
+       Ni(i) = Ni(i) + atomdata(findatom(coords(i)%atom_type))%incharge  ! - Population for atom i (calculated as population on the outest shell + population in the inner shells)
     end do
   END SUBROUTINE dftbp_tag
 
@@ -270,9 +282,7 @@ CONTAINS
     integer(ki),intent(IN) :: Z
     
     basym = ( 1 / alpha )**(1./3.) * ( real(Z) / N )**(1./3.)
-!    if (debug) write(fiit(bvalues),'(1A3,3F8.3,I5)') coords(i)%atom_type, basym, alpha, N, Z
-!    print*, 'basym', b0,alpha,Z,N  ! debug
-    
+
   END FUNCTION basym
   
 
@@ -286,6 +296,6 @@ CONTAINS
 
     
 
-END PROGRAM SCC_Disp
+END PROGRAM DDMCv1
 
    
