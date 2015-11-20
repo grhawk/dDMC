@@ -122,8 +122,7 @@ PROGRAM dDMC
   C6aim(:) = (Ni(:) / dble(Zaim(:)))**2 * C6free(:)                  ! D3
   
 
- 
-  if( debug )then
+    if( debug )then
      call openfile(bvalues,'replace')                                     
      call openfile(chrgfile,'replace')
      call openfile(coordfile,'replace')
@@ -154,7 +153,7 @@ PROGRAM dDMC
   if( debug ) call openfile(energydbg,'replace')
   if( debug ) write(fiit(energydbg),*) '#AT_TP(i)    AT_TP(j)    Rab    Rab0    damp   C6(i)   C6(j)  C6ab    E_ij   Etot'
   if( debug ) call openfile(graddbg,'replace')
-  if( debug ) write(fiit(graddbg),*) '#AT_TP(i)    AT_TP(j)    Rab    Rab0    dfp    C6ab    Fij FTOT'
+  if( debug ) write(fiit(graddbg),*) '#AT_TP(i)    AT_TP(j)   i  j    Rab    Rab0  Rvdw(i)  Rvdw(j)  dfp    C6ab    Fij'
   if( debug ) call openfile(distances,'replace')
   if( debug ) write(fiit(distances),*) '# AT_TP(i)    AT_TP(j)    xi   yi   zi   xj   yj    zj Rab'
   if( debug ) call openfile(dampingfunc,'replace')
