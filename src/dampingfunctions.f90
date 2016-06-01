@@ -142,49 +142,60 @@ CONTAINS
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
             & df_functions(dftype)%parameters(1)*basymj)
        
-       dfp = -0.000694444444444444*(1.0*tanh(-df_functions(dftype)%parameters(3) + &
-            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) + 1.0)* &
-            & (1.0*R0*df_functions(dftype)%parameters(2)*bij**7*R**7 + &
-            & 6.0*R0*df_functions(dftype)%parameters(2)*bij**6*R**6 + &
-            & 36.0*R0*df_functions(dftype)%parameters(2)*bij**5*R**5 + &
-            & 180.0*R0*df_functions(dftype)%parameters(2)*bij**4*R**4 + &
-            & 720.0*R0*df_functions(dftype)%parameters(2)*bij**3*R**3 + &
-            & 2160.0*R0*df_functions(dftype)%parameters(2)*bij**2*R**2 + &
-            & 4320.0*R0*df_functions(dftype)%parameters(2)*bij*R - &
-            & 4320.0*R0*df_functions(dftype)%parameters(2)*exp(bij*R) + &
-            & 4320.0*R0*df_functions(dftype)%parameters(2) + &
-            & 1.0*bij**6*df_functions(dftype)%parameters(3)*R**7* &
-            & tanh(-df_functions(dftype)%parameters(3) + &
-            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
-            & 1.0*bij**6*df_functions(dftype)%parameters(3)*R**7 + &
-            & 6.0*bij**5*df_functions(dftype)%parameters(3)*R**6* &
-            & tanh(-df_functions(dftype)%parameters(3) + &
-            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
-            & 6.0*bij**5*df_functions(dftype)%parameters(3)*R**6 + &
-            & 30.0*bij**4*df_functions(dftype)%parameters(3)*R**5* &
-            & tanh(-df_functions(dftype)%parameters(3) + &
-            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
-            & 30.0*bij**4*df_functions(dftype)%parameters(3)*R**5 + &
-            & 120.0*bij**3*df_functions(dftype)%parameters(3)*R**4* &
-            & tanh(-df_functions(dftype)%parameters(3) + &
-            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
-            & 120.0*bij**3*df_functions(dftype)%parameters(3)*R**4 + &
-            & 360.0*bij**2*df_functions(dftype)%parameters(3)*R**3* &
-            & tanh(-df_functions(dftype)%parameters(3) + &
-            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
-            & 360.0*bij**2*df_functions(dftype)%parameters(3)*R**3 + &
-            & 720.0*bij*df_functions(dftype)%parameters(3)*R**2* &
-            & tanh(-df_functions(dftype)%parameters(3) + &
-            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
-            & 720.0*bij*df_functions(dftype)%parameters(3)*R**2 - &
-            & 720.0*df_functions(dftype)%parameters(3)*R*exp(bij*R)* &
-            & tanh(-df_functions(dftype)%parameters(3) + &
-            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) + &
-            & 720.0*df_functions(dftype)%parameters(3)*R*exp(bij*R) + &
-            & 720.0*df_functions(dftype)%parameters(3)*R* &
-            & tanh(-df_functions(dftype)%parameters(3) + &
-            & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
-            & 720.0*df_functions(dftype)%parameters(3)*R)*exp(-bij*R)/(R0*df_functions(dftype)%parameters(2)*R**7)
+    !First Derivative computed from Alberto Fabrizio's expression
+
+       dfp = -0.5*df_functions(dftype)%parameters(3)/(R0*df_functions(dftype)%parameters(2))* &
+           & (1-(tanh(df_functions(dftype)%parameters(3)*(R/(R0*df_functions(dftype)%parameters(2))-1)))**2)* &
+           & (1-exp(-bij*R)*(1+bij*R+(bij**2*R**2)/2+(bij**3*R**3)/6+(bij**4*R**4)/24+(bij**5*R**5)/120+ &
+           & (bij**6*R**6)/720))/(R**6)-0.5*(1+tanh(df_functions(dftype)%parameters(3)*(R/(R0* &
+           & df_functions(dftype)%parameters(2))-1)))*0.001388889*bij**7*R**6*exp(-bij*R)/(R**6)+ &
+           & 0.5*(1+tanh(df_functions(dftype)%parameters(3)*(R/(R0*df_functions(dftype)%parameters(2))-1)))* &
+           & (1-exp(-bij*R)*(1+bij*R+(bij**2*R**2)/2+(bij**3*R**3)/6+(bij**4*R**4)/24+(bij**5*R**5)/120+ &
+           & (bij**6*R**6)/720))*6/(R**7)
+
+       ! dfp = -0.000694444444444444*(1.0*tanh(-df_functions(dftype)%parameters(3) + &
+       !      & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) + 1.0)* &
+       !      & (1.0*R0*df_functions(dftype)%parameters(2)*bij**7*R**7 + &
+       !      & 6.0*R0*df_functions(dftype)%parameters(2)*bij**6*R**6 + &
+       !      & 36.0*R0*df_functions(dftype)%parameters(2)*bij**5*R**5 + &
+       !      & 180.0*R0*df_functions(dftype)%parameters(2)*bij**4*R**4 + &
+       !      & 720.0*R0*df_functions(dftype)%parameters(2)*bij**3*R**3 + &
+       !      & 2160.0*R0*df_functions(dftype)%parameters(2)*bij**2*R**2 + &
+       !      & 4320.0*R0*df_functions(dftype)%parameters(2)*bij*R - &
+       !      & 4320.0*R0*df_functions(dftype)%parameters(2)*exp(bij*R) + &
+       !      & 4320.0*R0*df_functions(dftype)%parameters(2) + &
+       !      & 1.0*bij**6*df_functions(dftype)%parameters(3)*R**7* &
+       !      & tanh(-df_functions(dftype)%parameters(3) + &
+       !      & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+       !      & 1.0*bij**6*df_functions(dftype)%parameters(3)*R**7 + &
+       !      & 6.0*bij**5*df_functions(dftype)%parameters(3)*R**6* &
+       !      & tanh(-df_functions(dftype)%parameters(3) + &
+       !      & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+       !      & 6.0*bij**5*df_functions(dftype)%parameters(3)*R**6 + &
+       !      & 30.0*bij**4*df_functions(dftype)%parameters(3)*R**5* &
+       !      & tanh(-df_functions(dftype)%parameters(3) + &
+       !      & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+       !      & 30.0*bij**4*df_functions(dftype)%parameters(3)*R**5 + &
+       !      & 120.0*bij**3*df_functions(dftype)%parameters(3)*R**4* &
+       !      & tanh(-df_functions(dftype)%parameters(3) + &
+       !      & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+       !      & 120.0*bij**3*df_functions(dftype)%parameters(3)*R**4 + &
+       !      & 360.0*bij**2*df_functions(dftype)%parameters(3)*R**3* &
+       !      & tanh(-df_functions(dftype)%parameters(3) + &
+       !      & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+       !      & 360.0*bij**2*df_functions(dftype)%parameters(3)*R**3 + &
+       !      & 720.0*bij*df_functions(dftype)%parameters(3)*R**2* &
+       !      & tanh(-df_functions(dftype)%parameters(3) + &
+       !      & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+       !      & 720.0*bij*df_functions(dftype)%parameters(3)*R**2 - &
+       !      & 720.0*df_functions(dftype)%parameters(3)*R*exp(bij*R)* &
+       !      & tanh(-df_functions(dftype)%parameters(3) + &
+       !      & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) + &
+       !      & 720.0*df_functions(dftype)%parameters(3)*R*exp(bij*R) + &
+       !      & 720.0*df_functions(dftype)%parameters(3)*R* &
+       !      & tanh(-df_functions(dftype)%parameters(3) + &
+       !      & df_functions(dftype)%parameters(3)*R/(R0*df_functions(dftype)%parameters(2))) - &
+       !      & 720.0*df_functions(dftype)%parameters(3)*R)*exp(-bij*R)/(R0*df_functions(dftype)%parameters(2)*R**7)
 
     case(4)
        bij = bmix(df_functions(dftype)%parameters(1)*basymi, &
