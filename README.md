@@ -6,7 +6,7 @@ Look in src/main.f90 for more info!
 
 HOW TO COMPILE
 --------------
-You need a recend gfortran compilator installed on you machine.
+You need a recent gfortran compilator installed on your machine.
 
 $ cd src
 $ make
