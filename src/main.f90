@@ -38,6 +38,7 @@ PROGRAM dDMC
   USE read_input
   USE dampingfunctions
   USE read_gf
+  USE iosockets
   USE parameters, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
 
@@ -122,7 +123,7 @@ PROGRAM dDMC
   C6aim(:) = (Ni(:) / dble(Zaim(:)))**2 * C6free(:)                  ! D3
   
 
-    if( debug )then
+  if( debug )then
      call openfile(bvalues,'replace')                                     
      call openfile(chrgfile,'replace')
      call openfile(coordfile,'replace')
@@ -175,6 +176,7 @@ PROGRAM dDMC
         
 !        Rab0 = cubsum(rvdw(i),rvdw(j))
         Rab0 = rvdw(i)+rvdw(j)
+        
         if(debug) then
           damp =  df(coords(i)%atom_type,coords(j)%atom_type,basym_ii(i),basym_ii(j),Rab,Rab0,dampingfunc)
         else
@@ -190,7 +192,7 @@ PROGRAM dDMC
         if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
              & damp, C6aim(i), C6aim(j), C6ab, -damp * C6ab / Rab**6, E
-        if( debug ) write(fiit(excelfile),'(2A3,2X,20(X,F15.5))')&
+        if( debug ) write(fiit(excelfile),'(2A3,2X,20(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, Rab, rvdw(i)&
              &, rvdw(j), Rab0, polar(i), polar(j), C6free(i),&
              & C6free(j), real(Zaim(i)),real(Zaim(j)), Ni(i), Ni(j),&
@@ -236,7 +238,7 @@ PROGRAM dDMC
   if( debug ) call closefile(excelfile)
   if( debug ) call closefile(graddbg)
 
-  if (  debug )then
+  if ( debug )then
      call openfile(c6last,'replace')
      write(fiit(c6last),*) '#ATOM_TYPE     C6free    C6aim'
      do i = 1,natom

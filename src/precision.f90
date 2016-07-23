@@ -10,7 +10,8 @@ MODULE precision
   ! generic kinds
   integer, parameter :: ki=ki4,kr=kr8,kc=kc8,kch=64
   
-
+  integer, parameter :: lc = 200         !* length of a long string
+  
 CONTAINS
   SUBROUTINE die(msg)
     IMPLICIT NONE
