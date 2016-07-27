@@ -12,13 +12,14 @@ MODULE precision
   
   integer, parameter :: lc = 200         !* length of a long string
   
+  
 CONTAINS
   SUBROUTINE die(msg)
     IMPLICIT NONE
     character(*),intent(IN) :: msg
     
     write(0,*) msg
-    stop 1
+    stop 1   
     
   END SUBROUTINE die
 

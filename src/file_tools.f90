@@ -53,7 +53,10 @@ CONTAINS
           getunit = file_unit(i)%unit
           exit doloop
        end if
-       if( i == maxfile ) call die('ERROR: File not found in getunit')
+       if( i == maxfile ) then
+        print *,'input =', input
+        call die('ERROR: File not found in getunit')
+       end if
     end do doloop
     
   END FUNCTION getunit

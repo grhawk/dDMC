@@ -1,8 +1,9 @@
 PROG = dDMC.x
 #FC = ifort
 FC = gfortran
+CC = gcc
 LIBS = 
-FFLAGS = -O
+FFLAGS = -O -g
 # F03FLAGS = -O -std=f2003 -cpp
 F03FLAGS = -O
 LDFLAGS = 
@@ -14,13 +15,12 @@ CCOPT =
 
 OBJS =  main.o file_tools.o precision.o iosockets.o fsockets.o sockets.o read_atomdata.o \
 	read_tag_dftbp.o read_xyz.o string_tools.o utils.o parameters.o \
-	read_input.o dampingfunctions.o read_gf.o \
-	
+	read_input.o dampingfunctions.o read_gf.o 
 
 $(PROG): $(OBJS)
 	$(FC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
-%.o : %c
+%.o : %.c
 	$(CC) $(CCOPT) -c $<
 
 %.o : %.f90
@@ -42,7 +42,7 @@ read_input.o: precision.o string_tools.o
 dampingfunctions.o: precision.o file_tools.o read_input.o
 main.o: precision.o read_atomdata.o read_tag_dftbp.o read_xyz.o utils.o \
 	parameters.o read_input.o file_tools.o dampingfunctions.o \
-	read_gf.o Makefile
+	read_gf.o iosockets.o Makefile
 
 .PHONY: default clean veryclean debug fcheck fdepend showtargets
 
