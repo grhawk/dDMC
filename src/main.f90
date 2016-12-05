@@ -130,7 +130,7 @@ PROGRAM dDMC
   ! Socket initialization
   tSocket = .true.
   socketPort = 0  
-  SocketHost = "/tmp/ipi_F2_AP-dDMC"
+  SocketHost = "/tmp/ipi_ddmc-F2AP"
   SocketVerb = 55
   protocol =  IPI_PROTOCOL1
   iRid = -1
@@ -143,7 +143,6 @@ PROGRAM dDMC
       call create( pSocket, nAtom, SocketHost, SocketVerb, protocol, SocketPort)
     end if
   end if
-
   
   ! => Initialize arrays
   allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom),grad(natom,3), Coord0(3,natom))
