@@ -13,3 +13,10 @@ $ cd src
 $ make
 ```
 Tested on Debian 8
+
+
+SPECIFIC FOR THIS BRANCH
+------------------------
+Stepan will implement the i-pi socket interface.
+My first contribution.
+Brnach renamed to just ipi.

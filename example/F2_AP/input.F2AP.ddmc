@@ -19,7 +19,7 @@ tag = results.tag
 method = dftb
 
 # Do you want the gradient? (UP = yes, DOWN = no)
-gradient = DOWN
+gradient = UP
 
 # If you want to debug... or to test
 #debugflag = UP
