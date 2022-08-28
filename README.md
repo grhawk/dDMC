@@ -1,7 +1,7 @@
 dDMC
 ====
 Dispersion correction tailored around the SCC-DFTB approach
-Look in src/main.f90 for more info!
+This is the main implementation of the paper [A fast charge-Dependent atom-pairwise dispersion correction for DFTB3](https://onlinelibrary.wiley.com/doi/abs/10.1002/qua.24887).
 
 
 HOW TO COMPILE
