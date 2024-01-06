@@ -53,7 +53,10 @@ CONTAINS
           getunit = file_unit(i)%unit
           exit doloop
        end if
-       if( i == maxfile ) call die('ERROR: File not found in getunit')
+       if( i == maxfile ) then
+        print *,'input =', input
+        call die('ERROR: File not found in getunit')
+       end if
     end do doloop
     
   END FUNCTION getunit
@@ -104,8 +107,7 @@ CONTAINS
     
     call refresh_file_unit(unit=unit,file=file_name,create=.false.)
 
-    close(unit)
-    
+    close(unit)   
 
   END SUBROUTINE close_file
 
@@ -140,8 +142,8 @@ CONTAINS
     if( .not. present(unit) .and. .not. present(file) ) call die('ERROR in refreshing file_unit')
     if( .not.  create .and. present(file) )  unit = fiit(file)
 
-    if( .not. create) then
-       if(file_unit(unit - initial_value)%file == '' ) call die('ERROR: File not found')
+    if( .not. create ) then
+       if ( file_unit(unit - initial_value)%file == '' ) call die('ERROR: File not found')
        file_unit(unit - initial_value)%file = ''
        opened_files = opened_files - 1
     else

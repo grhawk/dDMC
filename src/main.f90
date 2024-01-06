@@ -38,6 +38,7 @@ PROGRAM dDMC
   USE read_input
   USE dampingfunctions
   USE read_gf
+  USE iosockets
   USE parameters, only : BohrAngst,HartKcalMol
   IMPLICIT NONE
 
@@ -53,6 +54,8 @@ PROGRAM dDMC
   real(kr),dimension(:),allocatable :: C6aim,C6free
   real(kr),dimension(:),allocatable :: polar,rvdw,basym_ii
   real(kr),dimension(:,:),allocatable :: grad
+  real(kr8),dimension(:,:),allocatable :: Coord0
+  real(kr8),dimension(3,3)             :: latvec = 0.0  ! Lattice vector
 
   integer(ki) :: i,j
 
@@ -73,9 +76,25 @@ PROGRAM dDMC
   character(kch),parameter :: tagfile = 'dDMC.tag'
 !  integer(ki) :: dftype
 
+  ! Socket stuff
+  LOGICAL                       :: tSocket = .true.
+  INTEGER                       :: socketPort = 0
+  type(socketData),pointer      :: pSocket
+  character(lc)                 :: SocketHost
+  integer                       :: SocketVerb
+  integer                       :: protocol
+                                         
+  real(kr) :: totalStress(3,3) = 0.0
+  real(kr) :: cellVol = 0.0
+  
+  integer :: iRid, iORid                  !* Socket ID
+  
+  ! rid ... The index of the request, i.e. the replica that the force calculation is for (integer corresponding to the bead index)
+
+
   ! Read the input
   call read_stdin
-
+  
   ! Initialize some stuff
   if( debugflag == 'UP' ) debug=.true.
   CALL initialize_dfmodule(dftype, dfparamsfile, method)
@@ -108,8 +127,25 @@ PROGRAM dDMC
 
   if( Ni_size /= natom ) call die('ERROR: Number of charge is different from the number of atoms!') ! Controls
   
+  ! Socket initialization
+  tSocket = .true.
+  socketPort = 0  
+  SocketHost = "/tmp/ipi_ddmc-F2AP"
+  SocketVerb = 55
+  protocol =  IPI_PROTOCOL1
+  iRid = -1
+  iORid = -2  
+  if( tSocket )then
+    write(*,*) "Initialising for socket communication to host ", trim(SocketHost)    
+    if ( socketPort == 0 ) then
+      call create( pSocket, nAtom, SocketHost, SocketVerb, protocol )
+    else
+      call create( pSocket, nAtom, SocketHost, SocketVerb, protocol, SocketPort)
+    end if
+  end if
+  
   ! => Initialize arrays
-  allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom),grad(natom,3))
+  allocate(C6aim(natom),C6free(natom),Zaim(natom),polar(natom),rvdw(natom),basym_ii(natom),grad(natom,3), Coord0(3,natom))
   do i = 1,natom                                                                         ! Some useful arrays:
      Zaim(i) = atomdata(findatom(coords(i)%atom_type))%Z                                 ! - Z_i of atoms in xyz file
      C6free(i) = atomdata(findatom(coords(i)%atom_type))%D3C6                            ! - C6free by 3D for "   "
@@ -122,7 +158,7 @@ PROGRAM dDMC
   C6aim(:) = (Ni(:) / dble(Zaim(:)))**2 * C6free(:)                  ! D3
   
 
-    if( debug )then
+  if( debug )then
      call openfile(bvalues,'replace')                                     
      call openfile(chrgfile,'replace')
      call openfile(coordfile,'replace')
@@ -164,6 +200,23 @@ PROGRAM dDMC
        &im(i)  Zaim(j)  Ni(i)  Ni(j)  C6aim(i)  C6aim(j)  C6ab  basym(&
        &i)  basym(j)  damp  E  Etot' 
 
+mainloop: do while (.true.)
+
+  call retrieve(pSocket, Coord0, latvec, iRid) ! iRid is the index of the request, i.e. the replica that the force calculation is for 
+  
+  do i = 1,natom
+    coords(i)%coord(1) = Coord0(1,i)
+    coords(i)%coord(2) = Coord0(2,i)
+    coords(i)%coord(3) = Coord0(3,i)
+  end do
+  
+  ! Can be deleted
+  if ( iRid >= 0 ) then
+    if ( iRid /= iORid ) then ! iORid = -2 in this version of the program (Revision 4913)
+!       qInput = q0
+      iORid = iRid
+    end if
+  end if
 
   E = 0.0d0
   atom1: do i = 1,natom
@@ -175,6 +228,7 @@ PROGRAM dDMC
         
 !        Rab0 = cubsum(rvdw(i),rvdw(j))
         Rab0 = rvdw(i)+rvdw(j)
+        
         if(debug) then
           damp =  df(coords(i)%atom_type,coords(j)%atom_type,basym_ii(i),basym_ii(j),Rab,Rab0,dampingfunc)
         else
@@ -190,7 +244,7 @@ PROGRAM dDMC
         if( debug ) write(fiit(energydbg),'(2A3,2X,10(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, Rab, Rab0, &
              & damp, C6aim(i), C6aim(j), C6ab, -damp * C6ab / Rab**6, E
-        if( debug ) write(fiit(excelfile),'(2A3,2X,20(X,F15.5))')&
+        if( debug ) write(fiit(excelfile),'(2A3,2X,20(X,F15.5))') &
              & coords(i)%atom_type, coords(j)%atom_type, Rab, rvdw(i)&
              &, rvdw(j), Rab0, polar(i), polar(j), C6free(i),&
              & C6free(j), real(Zaim(i)),real(Zaim(j)), Ni(i), Ni(j),&
@@ -210,7 +264,7 @@ PROGRAM dDMC
   end do atom1
 
 
-  write(*,*) 'ATOM i     ATOM j     Grad'
+!    write(*,*) 'ATOM i     ATOM j     Grad'
   if (readgradflag == 'UP') then 
      grad(:,:) = 0.d0
      do i = 1,natom
@@ -224,7 +278,7 @@ PROGRAM dDMC
               if( debug ) write(fiit(graddbg),'(2A3,2X,2I4,9(X,E20.12))') &
                    & coords(i)%atom_type, coords(j)%atom_type, i, j, Rab, Rab0, rvdw(i), rvdw(j), &
                    & dfpr, C6ab, dfpr * C6ab * (coords(i)%coord - coords(j)%coord)/BohrAngst/Rab
-              write(*,'(2I4,3E30.10)') i,j,grad(i,:)
+!                write(*,'(2I4,3E30.10)') i,j,grad(i,:)
            end if
         end do
      end do
@@ -236,7 +290,7 @@ PROGRAM dDMC
   if( debug ) call closefile(excelfile)
   if( debug ) call closefile(graddbg)
 
-  if (  debug )then
+  if ( debug )then
      call openfile(c6last,'replace')
      write(fiit(c6last),*) '#ATOM_TYPE     C6free    C6aim'
      do i = 1,natom
@@ -245,12 +299,18 @@ PROGRAM dDMC
      call closefile(fiit(c6last))
   end if
 
-  write(*,'("Energy:  " f20.12 "    kcal/mol")') E*HartKcalMol
+  write(*,'("Energy:  " f20.12 "    kcal/mol")') E*HartKcalMol ! E should be Hartree (atomic) units and HartKcalMol is conversion factor from Hart to KcalMol
   if (readgradflag == 'UP') then 
      write(*,'("Forces:")')
      write(*,'("Atom    x     y    z")')
-     write(*,'(A3, 3g20.12)') (coords(i)%atom_type,grad(i,:)*27.211399000000004/0.529177249, i = 1,natom)
+     write(*,'(A3, 3g20.12)') (coords(i)%atom_type,grad(i,:)*27.211399000000004/0.529177249, i = 1,natom) ! 27.211399000000004/0.529177249 conversion to eV per Angstrom, 0.529177249: Bohr ~ Angstrom conversion
   end if
+  
+ ! E already in atomic units
+!  print *,'SHAPE1', SHAPE(grad(i,:),(/3,natom/)))
+!  print *,'SHAPE2', SHAPE(RESHAPE(-grad(i,:),(/3,natom/)))
+ 
+ call send(pSocket, E, RESHAPE(-grad(:,:),(/3,natom/)), totalStress*cellVol)
 
   CALL openfile(tagfile,'replace')
   write(fiit(tagfile),*) 'correction_energy     1'
@@ -263,7 +323,9 @@ PROGRAM dDMC
   end if
   CALL closefile(tagfile)
 
-  write(0,*) NEW_LINE('C'),'The Programs Ends Correctly!'
+!   write(0,*) NEW_LINE('C'),'The Programs Ends Correctly!'
+  
+end do mainloop
 
 CONTAINS
   
